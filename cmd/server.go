@@ -4,29 +4,28 @@ import (
 	"log"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/config"
+	"github.com/GeovaneCavalcante/tree-genealogical/database"
 	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin"
 	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/webserver"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	personInmemRepo "github.com/GeovaneCavalcante/tree-genealogical/person/inmem"
+	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
+	relationshipInmemRepo "github.com/GeovaneCavalcante/tree-genealogical/relationship/inmem"
 )
 
-var persons []*person.Person
-
 func main() {
+
+	inmenDB := database.New()
+
 	envs := config.LoadEnvVars()
 
-	persons = []*person.Person{
-
-		// {
-		// 	ID:   "1",
-		// 	Name: "Geovane",
-		// },
-	}
-
-	personRepo := personInmemRepo.NewPersonRepository(persons)
+	personRepo := personInmemRepo.NewPersonRepository(inmenDB)
 	personService := person.NewService(personRepo)
 
-	h := gin.Handlers(envs, personService)
+	relationshipRepo := relationshipInmemRepo.NewRelationshipRepository(inmenDB)
+	relationshipService := relationship.NewService(relationshipRepo)
+
+	h := gin.Handlers(envs, personService, relationshipService)
 
 	if err := webserver.Start(envs.APIPort, h); err != nil {
 		log.Fatalf("Failed to start API: %v", err)

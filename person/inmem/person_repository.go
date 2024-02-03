@@ -4,32 +4,33 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/database"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 	"github.com/google/uuid"
 )
 
 type PersonRepository struct {
-	Persons []*person.Person
+	InmenDB *database.Database
 }
 
-func NewPersonRepository(persons []*person.Person) *PersonRepository {
+func NewPersonRepository(inmenDB *database.Database) *PersonRepository {
 	return &PersonRepository{
-		Persons: persons,
+		InmenDB: inmenDB,
 	}
 }
 
 func (r *PersonRepository) Create(ctx context.Context, person *person.Person) error {
 	logger.Info("[Repository] Create person started")
 	person.ID = uuid.New().String()
-	r.Persons = append(r.Persons, person)
+	r.InmenDB.Persons = append(r.InmenDB.Persons, person)
 	logger.Info("[Repository] Create person finished")
 	return nil
 }
 
 func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Person, error) {
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s", personID))
-	for _, p := range r.Persons {
+	for _, p := range r.InmenDB.Persons {
 		if p.ID == personID {
 			return p, nil
 		}
@@ -41,7 +42,7 @@ func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Pe
 func (r *PersonRepository) List(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
 	logger.Info("[Repository] List person started")
 
-	persons := r.Persons
+	persons := r.InmenDB.Persons
 
 	logger.Info("[Repository] List person finished")
 	return persons, nil
@@ -49,9 +50,9 @@ func (r *PersonRepository) List(ctx context.Context, filters map[string]interfac
 
 func (r *PersonRepository) Update(ctx context.Context, personID string, person *person.Person) error {
 	logger.Info(fmt.Sprintf("[Repository] Update person started by personID: %s", personID))
-	for i, p := range r.Persons {
+	for i, p := range r.InmenDB.Persons {
 		if p.ID == personID {
-			r.Persons[i] = person
+			r.InmenDB.Persons[i] = person
 			return nil
 		}
 	}
@@ -61,9 +62,9 @@ func (r *PersonRepository) Update(ctx context.Context, personID string, person *
 
 func (r *PersonRepository) Delete(ctx context.Context, personID string) error {
 	logger.Info(fmt.Sprintf("[Repository] Delete person started by personID: %s", personID))
-	for i, p := range r.Persons {
+	for i, p := range r.InmenDB.Persons {
 		if p.ID == personID {
-			r.Persons = append(r.Persons[:i], r.Persons[i+1:]...)
+			r.InmenDB.Persons = append(r.InmenDB.Persons[:i], r.InmenDB.Persons[i+1:]...)
 			return nil
 		}
 	}
