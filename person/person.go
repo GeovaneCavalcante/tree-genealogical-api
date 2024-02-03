@@ -7,11 +7,11 @@ import (
 )
 
 type Person struct {
-	ID            string
-	Name          string
-	Sex           string
-	Level         int
-	Relationships []relationship.Relationship
+	ID            string                      `json:"id"`
+	Name          string                      `json:"name"`
+	Gender        string                      `json:"gender"`
+	Level         int                         `json:"level"`
+	Relationships []relationship.Relationship `json:"relationships"`
 }
 
 type Repository interface {
