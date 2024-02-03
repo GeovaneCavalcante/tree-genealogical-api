@@ -148,6 +148,150 @@ func main() {
 
 }
 
+// Cria uma nova árvore genealógica com base no parente e na lista de pessoas.
+func NewFamilyTree(root *Person, persons []*Person) *TreeGenealogical {
+	tg := &TreeGenealogical{
+		Root: root,
+	}
+	tg.BuildFamilyTree(root, persons, 1)
+	return tg
+}
+
+// Constrói a árvore genealógica com base no parente e na lista de pessoas.
+func (tg *TreeGenealogical) BuildFamilyTree(parente *Person, persons []*Person, level int) []*Relative {
+	var relatives []*Relative
+	// Busca por descendentes.
+	relatives = tg.searchDescendants(tg.Root, persons, level, relatives)
+	// Busca por ancestrais e seus parentes.
+	relatives = tg.searchAncestors(tg.Root, persons, level, relatives)
+	tg.Relatives = relatives
+	return relatives
+}
+
+// Descrição da relação com base no parente e no sexo.
+func (tg *TreeGenealogical) relationshipDescription(relative *Person, relatives []*Relative) string {
+
+	// Verifica se a relação é direta.
+	description := tg.directRelationDescription(relative)
+	if description != "" {
+		return description
+	}
+
+	// Busca os pais da pessoa com base nos parentes ja catalogados.
+	parent := tg.findParents(relative, relatives)
+
+	// Regras para determinar o novo parente com base no parente encontrado.
+	rulesParents := map[string]string{
+		father:      grandFather,
+		grandFather: greatGrandfather,
+	}
+
+	// Aplica as regras para determinar o novo parente.
+	if parent != nil {
+		for key, value := range rulesParents {
+			if isTypeOfTypeKinship(parent.Type, key) {
+				return descriptionBySex(value, relative.Sex)
+			}
+		}
+	}
+
+	// Busca os filhos da pessoa com base nos parentes ja catalogados.
+	child := tg.findChildren(relative, relatives)
+
+	// Regras para determinar o novo parente com base no parente encontrado.
+	rulesChild := map[string]string{
+		grandFather:      uncle,
+		uncle:            cousin,
+		cousin:           nephew,
+		brother:          nephew,
+		greatGrandfather: greatUncle,
+		nephew:           nephew,
+		son:              grandSon,
+		grandSon:         greatGrandSon,
+	}
+
+	// Aplica as regras para determinar o novo parente.
+	if child != nil {
+		for key, value := range rulesChild {
+			if child != nil && isTypeOfTypeKinship(child.Type, key) {
+				return descriptionBySex(value, relative.Sex)
+			}
+		}
+	}
+
+	return unknownRelation
+}
+
+// Busca por ancestrais de maneira recursiva.
+func (tg *TreeGenealogical) searchAncestors(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
+	if relative == nil {
+		return relatives
+	}
+	for _, relationship := range relative.Relationships {
+		secundePerson := findPerson(relationship.SecundePerson, persons)
+		if secundePerson == nil || tg.alreadyInFamily(secundePerson, relatives) {
+			continue // Pula para o próximo relacionamento se o parente já estiver na lista ou não for encontrado
+		}
+		// Adiciona o parente encontrado (ancestral) apenas se não estiver já na lista
+		re := tg.newRelative(secundePerson, level, relatives)
+		relatives = append(relatives, re)
+
+		// Recursivamente busca por mais ancestrais deste parente encontrado
+		relatives = tg.searchForRelatives(secundePerson, persons, level+1, relatives)
+		// Recursivamente busca por mais ancestrais
+		relatives = tg.searchAncestors(secundePerson, persons, level+1, relatives)
+
+	}
+
+	return relatives
+
+}
+
+// Busca por descendentes de maneira recursiva.
+func (tg *TreeGenealogical) searchDescendants(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
+	if relative == nil {
+		return relatives
+	}
+	for _, person := range persons {
+		for _, relationship := range person.Relationships {
+			if relationship.SecundePerson == relative.ID {
+				// Verifica se a pessoa já foi adicionada e não é o Root
+				if !tg.alreadyInFamily(person, relatives) {
+					re := tg.newRelative(person, level, relatives) // Assumindo que newRelative agora aceita relatives
+					relatives = append(relatives, re)              // Adiciona o parente apenas uma vez
+				}
+				// Continua a busca por descendentes de maneira recursiva
+				relatives = tg.searchDescendants(person, persons, level+1, relatives)
+			}
+		}
+	}
+	return relatives
+}
+
+// Busca por parentes de maneira recursiva.
+func (tg *TreeGenealogical) searchForRelatives(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
+	if relative == nil {
+		return relatives
+	}
+	for _, person := range persons {
+		for _, relationship := range person.Relationships {
+			if relationship.SecundePerson == relative.ID {
+				// Verifica se a pessoa já foi adicionada e não é o Root
+				if !tg.alreadyInFamily(person, relatives) && tg.Root.ID != person.ID {
+					// Se não estiver na lista, adicione e continue a busca recursiva
+					re := tg.newRelative(person, level, relatives)
+					relatives = append(relatives, re) // Adiciona uma única vez
+
+					// Continua a busca por mais parentes sem passar o mesmo slice modificado
+					relatives = tg.searchForRelatives(person, persons, level+1, relatives)
+				}
+			}
+		}
+	}
+	return relatives
+}
+
+// Encontra o pais do relative (Parente interado no momento).
 func (tg *TreeGenealogical) findParents(relative *Person, relatives []*Relative) *Relative {
 	if relative == nil {
 		return nil
@@ -165,6 +309,61 @@ func (tg *TreeGenealogical) findParents(relative *Person, relatives []*Relative)
 	return nil
 }
 
+func (tg *TreeGenealogical) directRelationDescription(relative *Person) string {
+	if relative == nil {
+		return ""
+	}
+	// Verifica se o relative é filho do Root.
+	if tg.isChildOfRoot(relative) {
+		return descriptionBySex(son, relative.Sex)
+	}
+
+	// Verifica se o relative é pai ou mae do Root.
+	if tg.isParentOfRoot(relative) {
+		return descriptionBySex(father, relative.Sex)
+	}
+
+	// Verifica se o relative é irmão do Root.
+	return tg.checkSiblingRelation(relative)
+}
+
+// Verifica se a pessoa é filho(a) do Root.
+func (tg *TreeGenealogical) isChildOfRoot(relative *Person) bool {
+	for _, relationship := range relative.Relationships {
+		if relationship.SecundePerson == tg.Root.ID {
+			return true
+		}
+	}
+	return false
+}
+
+// Verifica se a pessoa é pai/mãe do Root.
+func (tg *TreeGenealogical) isParentOfRoot(relative *Person) bool {
+	for _, relationship := range tg.Root.Relationships {
+		if relationship.SecundePerson == relative.ID {
+			return true
+		}
+	}
+	return false
+}
+
+// Verifica se a pessoa é irmão do Root.
+func (tg *TreeGenealogical) checkSiblingRelation(relative *Person) string {
+	for _, relationship := range tg.Root.Relationships {
+		for _, relationshipParent := range relative.Relationships {
+			if relationshipParent.SecundePerson == relationship.SecundePerson {
+				// Se ambos compartilham o mesmo pai/mãe, são irmãos.
+				secundePerson := findPerson(relationship.SecundePerson, persons)
+				if secundePerson != nil {
+					return descriptionBySex(brother, relative.Sex) // Usa o sexo do relative para determinar a relação.
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// Encontra o parente que é filho do relative (Parente interado no momento).
 func (tg *TreeGenealogical) findChildren(relative *Person, relatives []*Relative) *Relative {
 	if relative == nil {
 		return nil
@@ -182,32 +381,30 @@ func (tg *TreeGenealogical) findChildren(relative *Person, relatives []*Relative
 	return nil
 }
 
-func (tg *TreeGenealogical) directRelationDescription(relative *Person) string {
-	if relative == nil {
-		return ""
+// Cria um novo parente com base no relative e o adiciona à lista de parentes.
+func (tg *TreeGenealogical) newRelative(person *Person, level int, relatives []*Relative) *Relative {
+	relative := &Relative{
+		Type:   tg.relationshipDescription(person, relatives),
+		Level:  level,
+		Person: person,
 	}
-	for _, relationship := range relative.Relationships {
-		if tg.Root.ID == relationship.SecundePerson {
-			return descriptionBySex(son, tg.Root.Sex)
-		}
-	}
-
-	for _, relationship := range tg.Root.Relationships {
-		if relationship.SecundePerson == relative.ID {
-			return descriptionBySex(father, relative.Sex)
-		}
-		for _, relationshipParent := range relative.Relationships {
-			if relationshipParent.SecundePerson == relationship.SecundePerson {
-				secundePerson := findPerson(relationship.SecundePerson, persons)
-				if secundePerson != nil {
-					return descriptionBySex(brother, secundePerson.Sex)
-				}
-			}
-		}
-	}
-	return ""
+	return relative
 }
 
+// Verifica se o parente já está na lista de parentes.
+func (tg *TreeGenealogical) alreadyInFamily(relative *Person, relatives []*Relative) bool {
+	for _, p := range relatives {
+		if p.Person == nil {
+			continue
+		}
+		if p.Person.ID == relative.ID {
+			return true
+		}
+	}
+	return false
+}
+
+// Retorna a descrição da relação com base no parente e no sexo.
 func descriptionBySex(relative, sex string) string {
 	if relation, ok := kinshipTypes[relative]; ok {
 		if desc, ok := relation[sex]; ok {
@@ -218,6 +415,7 @@ func descriptionBySex(relative, sex string) string {
 	return unknownRelation
 }
 
+// Verifica se o tipo de parentesco é válido.
 func isTypeOfTypeKinship(typeKinship, p string) bool {
 	if _, ok := kinshipTypes[p]; !ok {
 		return false
@@ -230,52 +428,7 @@ func isTypeOfTypeKinship(typeKinship, p string) bool {
 	return false
 }
 
-func (tg *TreeGenealogical) relationshipDescription(relative *Person, relatives []*Relative) string {
-
-	description := tg.directRelationDescription(relative)
-
-	if description != "" {
-		return description
-	}
-
-	parent := tg.findParents(relative, relatives)
-	rulesParents := map[string]string{
-		father:      grandFather,
-		grandFather: greatGrandfather,
-	}
-
-	if parent != nil {
-		for key, value := range rulesParents {
-			if isTypeOfTypeKinship(parent.Type, key) {
-				return descriptionBySex(value, relative.Sex)
-			}
-		}
-	}
-
-	child := tg.findChildren(relative, relatives)
-
-	rulesChild := map[string]string{
-		grandFather:      uncle,
-		uncle:            cousin,
-		cousin:           nephew,
-		brother:          nephew,
-		greatGrandfather: greatUncle,
-		nephew:           nephew,
-		son:              grandSon,
-		grandSon:         greatGrandSon,
-	}
-
-	if child != nil {
-		for key, value := range rulesChild {
-			if child != nil && isTypeOfTypeKinship(child.Type, key) {
-				return descriptionBySex(value, relative.Sex)
-			}
-		}
-	}
-
-	return unknownRelation
-}
-
+// Encontra a pessoa com base no ID.
 func findPerson(ID string, persons []*Person) *Person {
 	for _, person := range persons {
 		if person.ID == ID {
@@ -283,108 +436,4 @@ func findPerson(ID string, persons []*Person) *Person {
 		}
 	}
 	return nil
-}
-
-func NewFamilyTree(root *Person, persons []*Person) *TreeGenealogical {
-	tg := &TreeGenealogical{
-		Root: root,
-	}
-	tg.BuildFamilyTree(root, persons, 1)
-	return tg
-}
-
-func (tg *TreeGenealogical) BuildFamilyTree(parente *Person, persons []*Person, level int) []*Relative {
-	var relatives []*Relative
-	relatives = tg.searchDescendants(tg.Root, persons, level, relatives)
-	relatives = tg.searchAncestors(tg.Root, persons, level, relatives)
-	tg.Relatives = relatives
-	return relatives
-}
-
-func (tg *TreeGenealogical) searchAncestors(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
-	if relative == nil {
-		return relatives
-	}
-	for _, relationship := range relative.Relationships {
-		secundePerson := findPerson(relationship.SecundePerson, persons)
-		if secundePerson == nil || tg.alreadyInFamily(secundePerson, relatives) {
-			continue // Pula para o próximo relacionamento se o parente já estiver na lista ou não for encontrado
-		}
-
-		// Adiciona o parente encontrado (ancestral) apenas se não estiver já na lista
-		re := tg.addRelative(secundePerson, level, relatives)
-		relatives = append(relatives, re)
-
-		// Recursivamente busca por mais ancestrais deste parente encontrado
-		relatives = tg.searchForRelatives(secundePerson, persons, level+1, relatives)
-		relatives = tg.searchAncestors(secundePerson, persons, level+1, relatives)
-
-	}
-
-	return relatives
-
-}
-
-func (tg *TreeGenealogical) searchDescendants(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
-	if relative == nil {
-		return relatives
-	}
-	for _, person := range persons {
-		for _, relationship := range person.Relationships {
-			if relationship.SecundePerson == relative.ID {
-				// Verifica se a pessoa já foi adicionada e não é o Root
-				if !tg.alreadyInFamily(person, relatives) {
-					re := tg.addRelative(person, level, relatives) // Assumindo que addRelative agora aceita relatives
-					relatives = append(relatives, re)              // Adiciona o parente apenas uma vez
-				}
-				// Continua a busca por descendentes de maneira recursiva
-				relatives = tg.searchDescendants(person, persons, level+1, relatives)
-			}
-		}
-	}
-	return relatives
-}
-
-func (tg *TreeGenealogical) searchForRelatives(relative *Person, persons []*Person, level int, relatives []*Relative) []*Relative {
-	if relative == nil {
-		return relatives
-	}
-	for _, person := range persons {
-		for _, relationship := range person.Relationships {
-			if relationship.SecundePerson == relative.ID {
-				// Verifica se a pessoa já foi adicionada e não é o Root
-				if !tg.alreadyInFamily(person, relatives) && tg.Root.ID != person.ID {
-					// Se não estiver na lista, adicione e continue a busca recursiva
-					re := tg.addRelative(person, level, relatives)
-					relatives = append(relatives, re) // Adiciona uma única vez
-
-					// Continua a busca por mais parentes sem passar o mesmo slice modificado
-					relatives = tg.searchForRelatives(person, persons, level+1, relatives)
-				}
-			}
-		}
-	}
-	return relatives
-}
-
-func (tg *TreeGenealogical) addRelative(person *Person, level int, relatives []*Relative) *Relative {
-	relative := &Relative{
-		Type:   tg.relationshipDescription(person, relatives),
-		Level:  level,
-		Person: person,
-	}
-
-	return relative
-}
-
-func (tg *TreeGenealogical) alreadyInFamily(relative *Person, relatives []*Relative) bool {
-	for _, p := range relatives {
-		if p.Person == nil {
-			continue
-		}
-		if p.Person.ID == relative.ID {
-			return true
-		}
-	}
-	return false
 }
