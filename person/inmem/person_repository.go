@@ -7,6 +7,7 @@ import (
 	"github.com/GeovaneCavalcante/tree-genealogical/database"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
+	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
 	"github.com/google/uuid"
 )
 
@@ -23,6 +24,7 @@ func NewPersonRepository(inmenDB *database.Database) *PersonRepository {
 func (r *PersonRepository) Create(ctx context.Context, person *person.Person) error {
 	logger.Info("[Repository] Create person started")
 	person.ID = uuid.New().String()
+	person.Relationships = []relationship.Relationship{}
 	r.InmenDB.Persons = append(r.InmenDB.Persons, person)
 	logger.Info("[Repository] Create person finished")
 	return nil

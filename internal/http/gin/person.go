@@ -14,18 +14,18 @@ func createPersonHandler(s person.UseCase) gin.HandlerFunc {
 		var p person.Person
 		if err := c.BindJSON(&p); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		if err := s.Create(c, &p); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		logger.Info("[Handler] Create person finished")
-		c.JSON(http.StatusCreated, p)
+		respondAccept(c, http.StatusCreated, p)
 	}
 }
 
@@ -38,17 +38,18 @@ func listPersonHandler(s person.UseCase) gin.HandlerFunc {
 		persons, err := s.List(c, filters)
 		if err != nil {
 			logger.Error("[Handler] List person error: ", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		if len(persons) == 0 {
 			logger.Info("[Handler] List person not found")
-			c.JSON(http.StatusOK, []person.Person{})
+			respondAccept(c, http.StatusOK, []person.Person{})
 			return
 		}
 
 		logger.Info("[Handler] List person finished")
+		respondAccept(c, http.StatusOK, persons)
 	}
 }
 
@@ -60,25 +61,25 @@ func getPersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		if personID == "" {
 			logger.Info("[Handler] Get person not found")
-			c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
 		}
 
 		p, err := s.Get(c, personID)
 		if err != nil {
 			logger.Error("[Handler] Get person error: ", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		if p == nil {
 			logger.Info("[Handler] Get person not found")
-			c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
 		}
 
 		logger.Info("[Handler] Get person finished")
-		c.JSON(http.StatusOK, p)
+		respondAccept(c, http.StatusOK, p)
 	}
 }
 
@@ -89,25 +90,25 @@ func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		if personID == "" {
 			logger.Info("[Handler] Update person not found")
-			c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
 		}
 
 		var p person.Person
 		if err := c.BindJSON(&p); err != nil {
 			logger.Error("[Handler] Update person error: ", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		if err := s.Update(c, personID, &p); err != nil {
 			logger.Error("[Handler] Update person error: ", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		logger.Info("[Handler] Update person finished")
-		c.JSON(http.StatusOK, p)
+		respondAccept(c, http.StatusOK, p)
 	}
 }
 
@@ -117,7 +118,7 @@ func deletePersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		if personID == "" {
 			logger.Info("[Handler] Delete person not found")
-			c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
 		}
 
@@ -125,12 +126,12 @@ func deletePersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		if err := s.Delete(c, personID); err != nil {
 			logger.Error("[Handler] Delete person error: ", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		logger.Info("[Handler] Delete person finished")
-		c.JSON(http.StatusNoContent, nil)
+		respondAccept(c, http.StatusNoContent, nil)
 	}
 }
 
