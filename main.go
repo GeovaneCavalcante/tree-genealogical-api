@@ -18,11 +18,11 @@ func NewPerson(name, gender, fatherID, motherID string) *person.Person {
 	}
 
 	if fatherID != "" {
-		person.Relationships = append(person.Relationships, relationship.Relationship{MainPerson: person.ID, SecundePerson: fatherID})
+		person.Relationships = append(person.Relationships, relationship.Relationship{MainPersonID: person.ID, SecundePersonID: fatherID})
 	}
 
 	if motherID != "" {
-		person.Relationships = append(person.Relationships, relationship.Relationship{MainPerson: person.ID, SecundePerson: motherID})
+		person.Relationships = append(person.Relationships, relationship.Relationship{MainPersonID: person.ID, SecundePersonID: motherID})
 	}
 
 	return person

@@ -3,9 +3,9 @@ package relationship
 import "context"
 
 type Relationship struct {
-	ID            string
-	MainPerson    string
-	SecundePerson string
+	ID              string
+	MainPersonID    string
+	SecundePersonID string
 }
 
 type Repository interface {

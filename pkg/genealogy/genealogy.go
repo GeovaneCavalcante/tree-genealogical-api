@@ -125,7 +125,7 @@ func (tg *TreeGenealogical) searchAncestors(relative *person.Person, persons []*
 		return relatives
 	}
 	for _, relationship := range relative.Relationships {
-		secundePerson := findPerson(relationship.SecundePerson, persons)
+		secundePerson := findPerson(relationship.SecundePersonID, persons)
 		if secundePerson == nil || tg.alreadyInFamily(secundePerson, relatives) {
 			continue // Pula para o próximo relacionamento se o parente já estiver na lista ou não for encontrado
 		}
@@ -151,7 +151,7 @@ func (tg *TreeGenealogical) searchDescendants(relative *person.Person, persons [
 	}
 	for _, person := range persons {
 		for _, relationship := range person.Relationships {
-			if relationship.SecundePerson == relative.ID {
+			if relationship.SecundePersonID == relative.ID {
 				// Verifica se a pessoa já foi adicionada e não é o Root
 				if !tg.alreadyInFamily(person, relatives) {
 					re := tg.newRelative(person, level, relatives, persons) // Assumindo que newRelative agora aceita relatives
@@ -172,7 +172,7 @@ func (tg *TreeGenealogical) searchForRelatives(relative *person.Person, persons 
 	}
 	for _, person := range persons {
 		for _, relationship := range person.Relationships {
-			if relationship.SecundePerson == relative.ID {
+			if relationship.SecundePersonID == relative.ID {
 				// Verifica se a pessoa já foi adicionada e não é o Root
 				if !tg.alreadyInFamily(person, relatives) && tg.Root.ID != person.ID {
 					// Se não estiver na lista, adicione e continue a busca recursiva
@@ -198,7 +198,7 @@ func (tg *TreeGenealogical) findParents(relative *person.Person, relatives []*Re
 			continue
 		}
 		for _, relationship := range p.Person.Relationships {
-			if relative.ID == relationship.SecundePerson {
+			if relative.ID == relationship.SecundePersonID {
 				return p
 			}
 		}
@@ -227,7 +227,7 @@ func (tg *TreeGenealogical) directRelationDescription(relative *person.Person, p
 // Verifica se a pessoa é filho(a) do Root.
 func (tg *TreeGenealogical) isChildOfRoot(relative *person.Person) bool {
 	for _, relationship := range relative.Relationships {
-		if relationship.SecundePerson == tg.Root.ID {
+		if relationship.SecundePersonID == tg.Root.ID {
 			return true
 		}
 	}
@@ -237,7 +237,7 @@ func (tg *TreeGenealogical) isChildOfRoot(relative *person.Person) bool {
 // Verifica se a pessoa é pai/mãe do Root.
 func (tg *TreeGenealogical) isParentOfRoot(relative *person.Person) bool {
 	for _, relationship := range tg.Root.Relationships {
-		if relationship.SecundePerson == relative.ID {
+		if relationship.SecundePersonID == relative.ID {
 			return true
 		}
 	}
@@ -248,9 +248,9 @@ func (tg *TreeGenealogical) isParentOfRoot(relative *person.Person) bool {
 func (tg *TreeGenealogical) checkSiblingRelation(relative *person.Person, persons []*person.Person) string {
 	for _, relationship := range tg.Root.Relationships {
 		for _, relationshipParent := range relative.Relationships {
-			if relationshipParent.SecundePerson == relationship.SecundePerson {
+			if relationshipParent.SecundePersonID == relationship.SecundePersonID {
 				// Se ambos compartilham o mesmo pai/mãe, são irmãos.
-				secundePerson := findPerson(relationship.SecundePerson, persons)
+				secundePerson := findPerson(relationship.SecundePersonID, persons)
 				if secundePerson != nil {
 					return descriptionBySex(brother, relative.Gender) // Usa o sexo do relative para determinar a relação.
 				}
@@ -270,7 +270,7 @@ func (tg *TreeGenealogical) findChildren(relative *person.Person, relatives []*R
 			if p.Person == nil {
 				continue
 			}
-			if p.Person.ID == relationship.SecundePerson {
+			if p.Person.ID == relationship.SecundePersonID {
 				return p
 			}
 		}
