@@ -103,7 +103,7 @@ func deletePersonHandler(s person.UseCase) gin.HandlerFunc {
 	}
 }
 
-func MakePersonHandler(r *gin.RouterGroup, s person.UseCase) {
+func MakePersonHandlers(r *gin.RouterGroup, s person.UseCase) {
 	r.Handle("POST", "/", createPersonHandler(s))
 	r.Handle("GET", "/", listPersonHandler(s))
 	r.Handle("GET", "/:id", getPersonHandler(s))
