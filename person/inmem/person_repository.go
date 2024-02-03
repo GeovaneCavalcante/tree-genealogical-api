@@ -6,20 +6,22 @@ import (
 
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
+	"github.com/google/uuid"
 )
 
 type PersonRepository struct {
 	Persons []*person.Person
 }
 
-func NewInmemRepository(persons []*person.Person) *PersonRepository {
+func NewPersonRepository(persons []*person.Person) *PersonRepository {
 	return &PersonRepository{
 		Persons: persons,
 	}
 }
 
-func (r *PersonRepository) Creat(ctx context.Context, person *person.Person) error {
+func (r *PersonRepository) Create(ctx context.Context, person *person.Person) error {
 	logger.Info("[Repository] Create person started")
+	person.ID = uuid.New().String()
 	r.Persons = append(r.Persons, person)
 	logger.Info("[Repository] Create person finished")
 	return nil

@@ -87,7 +87,7 @@ func (tg *TreeGenealogical) relationshipDescription(relative *person.Person, rel
 	if parent != nil {
 		for key, value := range rulesParents {
 			if isTypeOfTypeKinship(parent.Type, key) {
-				return descriptionBySex(value, relative.Sex)
+				return descriptionBySex(value, relative.Gender)
 			}
 		}
 	}
@@ -111,7 +111,7 @@ func (tg *TreeGenealogical) relationshipDescription(relative *person.Person, rel
 	if child != nil {
 		for key, value := range rulesChild {
 			if child != nil && isTypeOfTypeKinship(child.Type, key) {
-				return descriptionBySex(value, relative.Sex)
+				return descriptionBySex(value, relative.Gender)
 			}
 		}
 	}
@@ -212,12 +212,12 @@ func (tg *TreeGenealogical) directRelationDescription(relative *person.Person, p
 	}
 	// Verifica se o relative é filho do Root.
 	if tg.isChildOfRoot(relative) {
-		return descriptionBySex(son, relative.Sex)
+		return descriptionBySex(son, relative.Gender)
 	}
 
 	// Verifica se o relative é pai ou mae do Root.
 	if tg.isParentOfRoot(relative) {
-		return descriptionBySex(father, relative.Sex)
+		return descriptionBySex(father, relative.Gender)
 	}
 
 	// Verifica se o relative é irmão do Root.
@@ -252,7 +252,7 @@ func (tg *TreeGenealogical) checkSiblingRelation(relative *person.Person, person
 				// Se ambos compartilham o mesmo pai/mãe, são irmãos.
 				secundePerson := findPerson(relationship.SecundePerson, persons)
 				if secundePerson != nil {
-					return descriptionBySex(brother, relative.Sex) // Usa o sexo do relative para determinar a relação.
+					return descriptionBySex(brother, relative.Gender) // Usa o sexo do relative para determinar a relação.
 				}
 			}
 		}
@@ -302,9 +302,9 @@ func (tg *TreeGenealogical) alreadyInFamily(relative *person.Person, relatives [
 }
 
 // Retorna a descrição da relação com base no parente e no sexo.
-func descriptionBySex(relative, sex string) string {
+func descriptionBySex(relative, gender string) string {
 	if relation, ok := kinshipTypes[relative]; ok {
-		if desc, ok := relation[sex]; ok {
+		if desc, ok := relation[gender]; ok {
 			return desc
 		}
 		return unknownRelation

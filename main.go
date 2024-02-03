@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewPerson(name, sex, fatherID, motherID string) *person.Person {
+func NewPerson(name, gender, fatherID, motherID string) *person.Person {
 	person := &person.Person{
-		ID:   uuid.New().String(),
-		Name: name,
-		Sex:  sex,
+		ID:     uuid.New().String(),
+		Name:   name,
+		Gender: gender,
 	}
 
 	if fatherID != "" {

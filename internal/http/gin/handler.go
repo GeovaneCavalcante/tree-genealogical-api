@@ -4,14 +4,19 @@ import (
 	"net/http"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/config"
+	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/gin-gonic/gin"
 )
 
-func Handlers(envs *config.Environments) *gin.Engine {
+func Handlers(envs *config.Environments, personService person.UseCase) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/health", healthHandler)
-	r.Group("/api/")
+	v1 := r.Group("/api/v1")
+
+	pG := v1.Group("/person")
+
+	MakePersonHandler(pG, personService)
 
 	return r
 }

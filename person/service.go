@@ -52,6 +52,11 @@ func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*
 		return nil, fmt.Errorf("list person error: %w", err)
 	}
 
+	if len(persons) == 0 {
+		logger.Info("[Service] List person not found")
+		return nil, nil
+	}
+
 	logger.Info("[Service] List person finished")
 	return persons, nil
 }
@@ -67,7 +72,7 @@ func (s *Service) Update(ctx context.Context, personID string, person *Person) e
 
 	if p == nil {
 		logger.Error(fmt.Sprintf("[Service] Update person by personID: %s not found", personID), nil)
-		return fmt.Errorf("update person error: %w", err)
+		return fmt.Errorf("update person error: not found")
 	}
 
 	err = s.repo.Update(ctx, personID, person)
@@ -91,7 +96,7 @@ func (s *Service) Delete(ctx context.Context, personID string) error {
 
 	if p == nil {
 		logger.Error(fmt.Sprintf("[Service] Delete person by personID: %s not found", personID), nil)
-		return fmt.Errorf("delete person error: %w", err)
+		return fmt.Errorf("delete person error: not found")
 	}
 
 	err = s.repo.Delete(ctx, personID)
