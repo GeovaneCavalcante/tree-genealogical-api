@@ -20,7 +20,7 @@ func New() *Database {
 			Relationships: []*relationship.Relationship{},
 		}
 
-		loadGeovaneFamily(database)
+		//loadGeovaneFamily(database)
 	}
 
 	return database

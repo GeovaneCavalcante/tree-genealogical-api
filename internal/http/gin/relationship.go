@@ -3,6 +3,7 @@ package gin
 import (
 	"net/http"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
 	"github.com/gin-gonic/gin"
@@ -11,22 +12,32 @@ import (
 func createRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Create relationship started")
-		var r relationship.Relationship
+		var r presenter.PaternityRelationship
 		if err := c.BindJSON(&r); err != nil {
 			logger.Error("[Handler] Create relationship error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.Create(c, &r); err != nil {
+		if err := r.Validate(); err != nil {
+			logger.Error("[Handler] Create relationship error: ", err)
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		rs := r.ToRelationship()
+
+		if err := s.Create(c, rs); err != nil {
 			logger.Error("[Handler] Create relationship error: ", err)
 			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
+		rp := presenter.NewPaternityRelationship(rs)
+
 		logger.Info("[Handler] Create relationship finished")
 
-		respondAccept(c, http.StatusCreated, r)
+		respondAccept(c, http.StatusCreated, rp)
 	}
 }
 
@@ -44,12 +55,15 @@ func listRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 
 		if len(relationships) == 0 {
 			logger.Info("[Handler] List relationship not found")
-			respondAccept(c, http.StatusOK, []relationship.Relationship{})
+			respondAccept(c, http.StatusOK, []presenter.PaternityRelationship{})
 			return
 		}
 
 		logger.Info("[Handler] List relationship finished")
-		respondAccept(c, http.StatusOK, relationships)
+
+		rP := presenter.NewPaternityRelationships(relationships)
+
+		respondAccept(c, http.StatusOK, rP)
 	}
 }
 
@@ -78,7 +92,10 @@ func getRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 		}
 
 		logger.Info("[Handler] Get relationship finished")
-		respondAccept(c, http.StatusOK, r)
+
+		rp := presenter.NewPaternityRelationship(r)
+
+		respondAccept(c, http.StatusOK, rp)
 	}
 }
 
@@ -94,21 +111,32 @@ func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		var r relationship.Relationship
+		var r presenter.PaternityRelationship
 		if err := c.BindJSON(&r); err != nil {
 			logger.Error("[Handler] Update relationship error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.Update(c, relationshipID, &r); err != nil {
+		if err := r.Validate(); err != nil {
+			logger.Error("[Handler] Update relationship error: ", err)
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		rs := r.ToRelationship()
+
+		if err := s.Update(c, relationshipID, rs); err != nil {
 			logger.Error("[Handler] Update relationship error: ", err)
 			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		logger.Info("[Handler] Update relationship finished")
-		respondAccept(c, http.StatusOK, r)
+
+		rp := presenter.NewPaternityRelationship(rs)
+
+		respondAccept(c, http.StatusOK, rp)
 	}
 }
 
