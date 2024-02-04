@@ -1,0 +1,367 @@
+basePath: /api/v1
+definitions:
+  gin.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  presenter.PaternityRelationshipRequest:
+    properties:
+      child:
+        type: string
+      parent:
+        type: string
+    required:
+    - child
+    - parent
+    type: object
+  presenter.PaternityRelationshipResponse:
+    properties:
+      child:
+        type: string
+      id:
+        type: string
+      parent:
+        type: string
+    type: object
+  presenter.PersonRequest:
+    properties:
+      gender:
+        enum:
+        - F
+        - M
+        type: string
+      name:
+        type: string
+    required:
+    - gender
+    - name
+    type: object
+  presenter.PersonResponse:
+    properties:
+      gender:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a simple API to manage genealogical trees
+  title: Tree Genealogical API
+  version: "1.0"
+paths:
+  /person:
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: List persons
+      parameters:
+      - description: Filter by person's lasted name (no implemeted)
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/presenter.PersonResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: List persons
+      tags:
+      - person
+    post:
+      consumes:
+      - application/json
+      - text/xml
+      description: Create a person
+      parameters:
+      - description: Person
+        in: body
+        name: person
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.PersonRequest'
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presenter.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Create a person
+      tags:
+      - person
+  /person/{id}:
+    delete:
+      consumes:
+      - application/json
+      - text/xml
+      description: Delete a person
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Delete a person
+      tags:
+      - person
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: Get a person
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.PersonResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Get a person
+      tags:
+      - person
+    put:
+      consumes:
+      - application/json
+      - text/xml
+      description: Update a person
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Person
+        in: body
+        name: person
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.PersonRequest'
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Update a person
+      tags:
+      - person
+  /relationship:
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: List relationships
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/presenter.PaternityRelationshipResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: List relationships
+      tags:
+      - relationship
+    post:
+      consumes:
+      - application/json
+      - text/xml
+      description: Create a relationship
+      parameters:
+      - description: Relationship
+        in: body
+        name: relationship
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.PaternityRelationshipRequest'
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presenter.PaternityRelationshipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Create a relationship
+      tags:
+      - relationship
+  /relationship/{id}:
+    delete:
+      consumes:
+      - application/json
+      - text/xml
+      description: Delete a relationship
+      parameters:
+      - description: Relationship ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Delete a relationship
+      tags:
+      - relationship
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: Get a relationship
+      parameters:
+      - description: Relationship ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.PaternityRelationshipResponse'
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Get a relationship
+      tags:
+      - relationship
+    put:
+      consumes:
+      - application/json
+      - text/xml
+      description: Update a relationship
+      parameters:
+      - description: Relationship ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Relationship
+        in: body
+        name: relationship
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.PaternityRelationshipRequest'
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.PaternityRelationshipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Update a relationship
+      tags:
+      - relationship
+swagger: "2.0"
