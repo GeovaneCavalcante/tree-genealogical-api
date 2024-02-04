@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 )
 
@@ -17,7 +18,7 @@ func NewService(repo Repository) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, relationship *Relationship) error {
+func (s *Service) Create(ctx context.Context, relationship *entity.Relationship) error {
 	logger.Info("[Service] Create relationship started")
 
 	err := s.repo.Create(ctx, relationship)
@@ -30,7 +31,7 @@ func (s *Service) Create(ctx context.Context, relationship *Relationship) error 
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, relationshipID string) (*Relationship, error) {
+func (s *Service) Get(ctx context.Context, relationshipID string) (*entity.Relationship, error) {
 	logger.Info(fmt.Sprintf("[Service] Get relationship by relationshipID: %s", relationshipID))
 
 	relationship, err := s.repo.Get(ctx, relationshipID)
@@ -43,7 +44,7 @@ func (s *Service) Get(ctx context.Context, relationshipID string) (*Relationship
 	return relationship, nil
 }
 
-func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*Relationship, error) {
+func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*entity.Relationship, error) {
 	logger.Info("[Service] List relationship started")
 
 	relationships, err := s.repo.List(ctx, filters)
@@ -56,7 +57,7 @@ func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*
 	return relationships, nil
 }
 
-func (s *Service) Update(ctx context.Context, relationshipID string, relationship *Relationship) error {
+func (s *Service) Update(ctx context.Context, relationshipID string, relationship *entity.Relationship) error {
 	logger.Info(fmt.Sprintf("[Service] Update relationship started by relationshipID: %s", relationshipID))
 
 	r, err := s.Get(ctx, relationshipID)

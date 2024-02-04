@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 )
 
@@ -17,7 +18,7 @@ func NewService(repo Repository) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, person *Person) error {
+func (s *Service) Create(ctx context.Context, person *entity.Person) error {
 	logger.Info("[Service] Create person started")
 
 	err := s.repo.Create(ctx, person)
@@ -30,7 +31,7 @@ func (s *Service) Create(ctx context.Context, person *Person) error {
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, personID string) (*Person, error) {
+func (s *Service) Get(ctx context.Context, personID string) (*entity.Person, error) {
 	logger.Info(fmt.Sprintf("[Service] Get person by personID: %s", personID))
 
 	person, err := s.repo.Get(ctx, personID)
@@ -43,7 +44,7 @@ func (s *Service) Get(ctx context.Context, personID string) (*Person, error) {
 	return person, nil
 }
 
-func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*Person, error) {
+func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*entity.Person, error) {
 	logger.Info("[Service] List person started")
 
 	persons, err := s.repo.List(ctx, filters)
@@ -61,7 +62,7 @@ func (s *Service) List(ctx context.Context, filters map[string]interface{}) ([]*
 	return persons, nil
 }
 
-func (s *Service) Update(ctx context.Context, personID string, person *Person) error {
+func (s *Service) Update(ctx context.Context, personID string, person *entity.Person) error {
 	logger.Info(fmt.Sprintf("[Service] Update person started by personID: %s", personID))
 
 	p, err := s.Get(ctx, personID)

@@ -1,7 +1,7 @@
 package presenter
 
 import (
-	"github.com/GeovaneCavalcante/tree-genealogical/person"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -16,7 +16,7 @@ type PersonRequest struct {
 	Gender string `json:"gender" xml:"gender" validate:"required,oneof=F M"`
 }
 
-func NewPersonResponse(person *person.Person) *PersonResponse {
+func NewPersonResponse(person *entity.Person) *PersonResponse {
 	return &PersonResponse{
 		ID:     person.ID,
 		Name:   person.Name,
@@ -24,7 +24,7 @@ func NewPersonResponse(person *person.Person) *PersonResponse {
 	}
 }
 
-func NewPersonsResponse(persons []*person.Person) []*PersonResponse {
+func NewPersonsResponse(persons []*entity.Person) []*PersonResponse {
 	var response []*PersonResponse
 	for _, p := range persons {
 		response = append(response, NewPersonResponse(p))
@@ -32,15 +32,15 @@ func NewPersonsResponse(persons []*person.Person) []*PersonResponse {
 	return response
 }
 
-func NewPersonRequest(person *person.Person) *PersonRequest {
+func NewPersonRequest(person *entity.Person) *PersonRequest {
 	return &PersonRequest{
 		Name:   person.Name,
 		Gender: person.Gender,
 	}
 }
 
-func (p *PersonRequest) ToPerson() *person.Person {
-	return &person.Person{
+func (p *PersonRequest) ToPerson() *entity.Person {
+	return &entity.Person{
 		Name:   p.Name,
 		Gender: p.Gender,
 	}

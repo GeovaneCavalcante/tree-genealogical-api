@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
@@ -77,7 +78,7 @@ func listPersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		if len(persons) == 0 {
 			logger.Info("[Handler] List person not found")
-			respondAccept(c, http.StatusOK, []person.Person{})
+			respondAccept(c, http.StatusOK, []entity.Person{})
 			return
 		}
 

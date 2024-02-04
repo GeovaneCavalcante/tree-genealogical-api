@@ -1,7 +1,7 @@
 package presenter
 
 import (
-	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -16,7 +16,7 @@ type PaternityRelationshipRequest struct {
 	Child  string `json:"child" xml:"child" validate:"required"`
 }
 
-func NewPaternityRelationshipResponse(relationship *relationship.Relationship) *PaternityRelationshipResponse {
+func NewPaternityRelationshipResponse(relationship *entity.Relationship) *PaternityRelationshipResponse {
 	return &PaternityRelationshipResponse{
 		ID:     relationship.ID,
 		Parent: relationship.SecundePersonID,
@@ -24,7 +24,7 @@ func NewPaternityRelationshipResponse(relationship *relationship.Relationship) *
 	}
 }
 
-func NewPaternityRelationshipsResponse(relationships []*relationship.Relationship) []*PaternityRelationshipResponse {
+func NewPaternityRelationshipsResponse(relationships []*entity.Relationship) []*PaternityRelationshipResponse {
 	var response []*PaternityRelationshipResponse
 	for _, r := range relationships {
 		response = append(response, NewPaternityRelationshipResponse(r))
@@ -32,15 +32,15 @@ func NewPaternityRelationshipsResponse(relationships []*relationship.Relationshi
 	return response
 }
 
-func (p *PaternityRelationshipRequest) NewPaternityRelationshipRequest() *relationship.Relationship {
-	return &relationship.Relationship{
+func (p *PaternityRelationshipRequest) NewPaternityRelationshipRequest() *entity.Relationship {
+	return &entity.Relationship{
 		MainPersonID:    p.Child,
 		SecundePersonID: p.Parent,
 	}
 }
 
-func (p *PaternityRelationshipRequest) ToRelationship() *relationship.Relationship {
-	return &relationship.Relationship{
+func (p *PaternityRelationshipRequest) ToRelationship() *entity.Relationship {
+	return &entity.Relationship{
 		MainPersonID:    p.Child,
 		SecundePersonID: p.Parent,
 	}

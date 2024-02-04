@@ -3,17 +3,17 @@ package familytree
 import (
 	"context"
 
-	"github.com/GeovaneCavalcante/tree-genealogical/person"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 )
 
 type Relative struct {
 	Type   string
 	Level  int
-	Person *person.Person
+	Person *entity.Person
 }
 
 type GenealogyInterface interface {
-	BuildFamilyTree(ctx context.Context, parente *person.Person, persons []*person.Person, level int) []*Relative
+	BuildFamilyTree(ctx context.Context, parente *entity.Person, persons []*entity.Person, level int) []*Relative
 	GetRelatives(ctx context.Context) []*Relative
 }
 

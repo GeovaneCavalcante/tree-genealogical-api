@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/database"
-	"github.com/GeovaneCavalcante/tree-genealogical/person"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
-	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
 	"github.com/google/uuid"
 )
 
@@ -22,16 +21,16 @@ func NewPersonRepository(inmenDB *database.Database) *PersonRepository {
 	}
 }
 
-func (r *PersonRepository) Create(ctx context.Context, person *person.Person) error {
+func (r *PersonRepository) Create(ctx context.Context, person *entity.Person) error {
 	logger.Info("[Repository] Create person started")
 	person.ID = uuid.New().String()
-	person.Relationships = []relationship.Relationship{}
+	person.Relationships = []*entity.Relationship{}
 	r.InmenDB.Persons = append(r.InmenDB.Persons, *person)
 	logger.Info("[Repository] Create person finished")
 	return nil
 }
 
-func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Person, error) {
+func (r *PersonRepository) Get(ctx context.Context, personID string) (*entity.Person, error) {
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s", personID))
 	for _, p := range r.InmenDB.Persons {
 		if p.ID == personID {
@@ -43,7 +42,7 @@ func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Pe
 	return nil, nil
 }
 
-func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.Person, error) {
+func (r *PersonRepository) GetByName(ctx context.Context, name string) (*entity.Person, error) {
 	logger.Info(fmt.Sprintf("[Repository] Get person by name: %s", name))
 	for _, p := range r.InmenDB.Persons {
 		if strings.EqualFold(p.Name, name) {
@@ -51,7 +50,7 @@ func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.
 			for _, r := range r.InmenDB.Relationships {
 				if r.MainPersonID == person.ID {
 					relationship := r
-					person.Relationships = append(person.Relationships, relationship)
+					person.Relationships = append(person.Relationships, &relationship)
 				}
 			}
 			return &person, nil
@@ -61,10 +60,10 @@ func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.
 	return nil, nil
 }
 
-func (r *PersonRepository) List(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
+func (r *PersonRepository) List(ctx context.Context, filters map[string]interface{}) ([]*entity.Person, error) {
 	logger.Info("[Repository] List person started")
 
-	var persons []*person.Person
+	var persons []*entity.Person
 
 	for _, p := range r.InmenDB.Persons {
 		person := p
@@ -75,16 +74,16 @@ func (r *PersonRepository) List(ctx context.Context, filters map[string]interfac
 	return persons, nil
 }
 
-func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
+func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters map[string]interface{}) ([]*entity.Person, error) {
 	logger.Info("[Repository] List person with relationships started")
 
-	var persons []*person.Person
+	var persons []*entity.Person
 	for _, p := range r.InmenDB.Persons {
 		person := p
 		for _, r := range r.InmenDB.Relationships {
 			if r.MainPersonID == person.ID {
 				relationship := r
-				person.Relationships = append(person.Relationships, relationship)
+				person.Relationships = append(person.Relationships, &relationship)
 			}
 		}
 		persons = append(persons, &person)
@@ -93,7 +92,7 @@ func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters ma
 
 }
 
-func (r *PersonRepository) Update(ctx context.Context, personID string, person *person.Person) error {
+func (r *PersonRepository) Update(ctx context.Context, personID string, person *entity.Person) error {
 	logger.Info(fmt.Sprintf("[Repository] Update person started by personID: %s", personID))
 	for i, p := range r.InmenDB.Persons {
 		if p.ID == personID {
