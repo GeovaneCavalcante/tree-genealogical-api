@@ -1,14 +1,13 @@
 package database
 
 import (
-	"github.com/GeovaneCavalcante/tree-genealogical/person"
-	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/google/uuid"
 )
 
 type Database struct {
-	Persons       []person.Person
-	Relationships []relationship.Relationship
+	Persons       []entity.Person
+	Relationships []entity.Relationship
 }
 
 var database *Database
@@ -16,8 +15,8 @@ var database *Database
 func New() *Database {
 	if database == nil {
 		database = &Database{
-			Persons:       []person.Person{},
-			Relationships: []relationship.Relationship{},
+			Persons:       []entity.Person{},
+			Relationships: []entity.Relationship{},
 		}
 
 		loadGeovaneFamily(database)
@@ -26,21 +25,21 @@ func New() *Database {
 	return database
 }
 
-func NewPerson(db *Database, name, gender, fatherID, motherID string) person.Person {
-	person := person.Person{
+func NewPerson(db *Database, name, gender, fatherID, motherID string) entity.Person {
+	person := entity.Person{
 		ID:     uuid.New().String(),
 		Name:   name,
 		Gender: gender,
 	}
 
 	if fatherID != "" {
-		relationship := relationship.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: fatherID}
+		relationship := entity.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: fatherID}
 		db.Relationships = append(db.Relationships, relationship)
 
 	}
 
 	if motherID != "" {
-		relationship := relationship.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: motherID}
+		relationship := entity.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: motherID}
 		db.Relationships = append(db.Relationships, relationship)
 	}
 
@@ -49,7 +48,7 @@ func NewPerson(db *Database, name, gender, fatherID, motherID string) person.Per
 	return person
 }
 
-func loadGeovaneFamily(db *Database) []person.Person {
+func loadGeovaneFamily(db *Database) []entity.Person {
 
 	geruza := NewPerson(db, "Geruza", "F", "", "")
 	geova := NewPerson(db, "Geova", "M", "", "")
@@ -75,7 +74,7 @@ func loadGeovaneFamily(db *Database) []person.Person {
 
 	neymar := NewPerson(db, "Neymar", "M", vicovane.ID, "")
 
-	persons := []person.Person{
+	persons := []entity.Person{
 		geova,
 		iraci,
 		pedro,

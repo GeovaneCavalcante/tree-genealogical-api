@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/database"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
-	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +20,7 @@ func NewRelationshipRepository(inmenDB *database.Database) *RelationshipReposito
 	}
 }
 
-func (r *RelationshipRepository) Create(ctx context.Context, relationship *relationship.Relationship) error {
+func (r *RelationshipRepository) Create(ctx context.Context, relationship *entity.Relationship) error {
 	logger.Info("[Repository] Create relationship started")
 	relationship.ID = uuid.New().String()
 	r.InmenDB.Relationships = append(r.InmenDB.Relationships, *relationship)
@@ -28,7 +28,7 @@ func (r *RelationshipRepository) Create(ctx context.Context, relationship *relat
 	return nil
 }
 
-func (r *RelationshipRepository) Get(ctx context.Context, relationshipID string) (*relationship.Relationship, error) {
+func (r *RelationshipRepository) Get(ctx context.Context, relationshipID string) (*entity.Relationship, error) {
 	logger.Info(fmt.Sprint("[Repository] Get relationship by relationshipID: ", relationshipID))
 	for _, r := range r.InmenDB.Relationships {
 		if r.ID == relationshipID {
@@ -40,10 +40,10 @@ func (r *RelationshipRepository) Get(ctx context.Context, relationshipID string)
 	return nil, nil
 }
 
-func (r *RelationshipRepository) List(ctx context.Context, filters map[string]interface{}) ([]*relationship.Relationship, error) {
+func (r *RelationshipRepository) List(ctx context.Context, filters map[string]interface{}) ([]*entity.Relationship, error) {
 	logger.Info("[Repository] List relationship started")
 
-	relationships := []*relationship.Relationship{}
+	relationships := []*entity.Relationship{}
 	for _, r := range r.InmenDB.Relationships {
 		relationship := r
 		relationships = append(relationships, &relationship)
@@ -53,7 +53,7 @@ func (r *RelationshipRepository) List(ctx context.Context, filters map[string]in
 	return relationships, nil
 }
 
-func (r *RelationshipRepository) Update(ctx context.Context, relationshipID string, relationship *relationship.Relationship) error {
+func (r *RelationshipRepository) Update(ctx context.Context, relationshipID string, relationship *entity.Relationship) error {
 	logger.Info(fmt.Sprintf("[Repository] Update relationship started by relationshipID: %s", relationshipID))
 	for i, rr := range r.InmenDB.Relationships {
 		if rr.ID == relationshipID {

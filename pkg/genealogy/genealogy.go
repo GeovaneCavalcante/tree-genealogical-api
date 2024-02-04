@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/familytree"
-	"github.com/GeovaneCavalcante/tree-genealogical/person"
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 )
 
 const (
@@ -39,8 +39,8 @@ var kinshipTypes = map[string]map[string]string{
 }
 
 type TreeGenealogical struct {
-	Root      *person.Person
-	Persons   []*person.Person
+	Root      *entity.Person
+	Persons   []*entity.Person
 	Relatives []*familytree.Relative
 }
 
@@ -51,7 +51,7 @@ func NewFamilyTree() *TreeGenealogical {
 }
 
 // Constrói a árvore genealógica com base no parente e na lista de pessoas.
-func (tg *TreeGenealogical) BuildFamilyTree(ctx context.Context, parente *person.Person, persons []*person.Person, level int) []*familytree.Relative {
+func (tg *TreeGenealogical) BuildFamilyTree(ctx context.Context, parente *entity.Person, persons []*entity.Person, level int) []*familytree.Relative {
 	var relatives []*familytree.Relative
 	tg.Root = parente
 	// Busca por descendentes.
@@ -68,7 +68,7 @@ func (tg *TreeGenealogical) GetRelatives(ctx context.Context) []*familytree.Rela
 }
 
 // Descrição da relação com base no parente e no sexo.
-func (tg *TreeGenealogical) relationshipDescription(relative *person.Person, relatives []*familytree.Relative, persons []*person.Person) string {
+func (tg *TreeGenealogical) relationshipDescription(relative *entity.Person, relatives []*familytree.Relative, persons []*entity.Person) string {
 
 	// Verifica se a relação é direta.
 	description := tg.directRelationDescription(relative, persons)
@@ -122,7 +122,7 @@ func (tg *TreeGenealogical) relationshipDescription(relative *person.Person, rel
 }
 
 // Busca por ancestrais de maneira recursiva.
-func (tg *TreeGenealogical) searchAncestors(ctx context.Context, relative *person.Person, persons []*person.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
+func (tg *TreeGenealogical) searchAncestors(ctx context.Context, relative *entity.Person, persons []*entity.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
 	if relative == nil {
 		return relatives
 	}
@@ -147,7 +147,7 @@ func (tg *TreeGenealogical) searchAncestors(ctx context.Context, relative *perso
 }
 
 // Busca por descendentes de maneira recursiva.
-func (tg *TreeGenealogical) searchDescendants(ctx context.Context, relative *person.Person, persons []*person.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
+func (tg *TreeGenealogical) searchDescendants(ctx context.Context, relative *entity.Person, persons []*entity.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
 	if relative == nil {
 		return relatives
 	}
@@ -168,7 +168,7 @@ func (tg *TreeGenealogical) searchDescendants(ctx context.Context, relative *per
 }
 
 // Busca por parentes de maneira recursiva.
-func (tg *TreeGenealogical) searchForRelatives(ctx context.Context, relative *person.Person, persons []*person.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
+func (tg *TreeGenealogical) searchForRelatives(ctx context.Context, relative *entity.Person, persons []*entity.Person, level int, relatives []*familytree.Relative) []*familytree.Relative {
 	if relative == nil {
 		return relatives
 	}
@@ -191,7 +191,7 @@ func (tg *TreeGenealogical) searchForRelatives(ctx context.Context, relative *pe
 }
 
 // Encontra o pais do relative (Parente interado no momento).
-func (tg *TreeGenealogical) findParents(relative *person.Person, relatives []*familytree.Relative) *familytree.Relative {
+func (tg *TreeGenealogical) findParents(relative *entity.Person, relatives []*familytree.Relative) *familytree.Relative {
 	if relative == nil {
 		return nil
 	}
@@ -208,7 +208,7 @@ func (tg *TreeGenealogical) findParents(relative *person.Person, relatives []*fa
 	return nil
 }
 
-func (tg *TreeGenealogical) directRelationDescription(relative *person.Person, persons []*person.Person) string {
+func (tg *TreeGenealogical) directRelationDescription(relative *entity.Person, persons []*entity.Person) string {
 	if relative == nil {
 		return ""
 	}
@@ -227,7 +227,7 @@ func (tg *TreeGenealogical) directRelationDescription(relative *person.Person, p
 }
 
 // Verifica se a pessoa é filho(a) do Root.
-func (tg *TreeGenealogical) isChildOfRoot(relative *person.Person) bool {
+func (tg *TreeGenealogical) isChildOfRoot(relative *entity.Person) bool {
 	for _, relationship := range relative.Relationships {
 		if relationship.SecundePersonID == tg.Root.ID {
 			return true
@@ -237,7 +237,7 @@ func (tg *TreeGenealogical) isChildOfRoot(relative *person.Person) bool {
 }
 
 // Verifica se a pessoa é pai/mãe do Root.
-func (tg *TreeGenealogical) isParentOfRoot(relative *person.Person) bool {
+func (tg *TreeGenealogical) isParentOfRoot(relative *entity.Person) bool {
 	for _, relationship := range tg.Root.Relationships {
 		if relationship.SecundePersonID == relative.ID {
 			return true
@@ -247,7 +247,7 @@ func (tg *TreeGenealogical) isParentOfRoot(relative *person.Person) bool {
 }
 
 // Verifica se a pessoa é irmão do Root.
-func (tg *TreeGenealogical) checkSiblingRelation(relative *person.Person, persons []*person.Person) string {
+func (tg *TreeGenealogical) checkSiblingRelation(relative *entity.Person, persons []*entity.Person) string {
 	for _, relationship := range tg.Root.Relationships {
 		for _, relationshipParent := range relative.Relationships {
 			if relationshipParent.SecundePersonID == relationship.SecundePersonID {
@@ -263,7 +263,7 @@ func (tg *TreeGenealogical) checkSiblingRelation(relative *person.Person, person
 }
 
 // Encontra o parente que é filho do relative (Parente interado no momento).
-func (tg *TreeGenealogical) findChildren(relative *person.Person, relatives []*familytree.Relative) *familytree.Relative {
+func (tg *TreeGenealogical) findChildren(relative *entity.Person, relatives []*familytree.Relative) *familytree.Relative {
 	if relative == nil {
 		return nil
 	}
@@ -281,7 +281,7 @@ func (tg *TreeGenealogical) findChildren(relative *person.Person, relatives []*f
 }
 
 // Cria um novo parente com base no relative e o adiciona à lista de parentes.
-func (tg *TreeGenealogical) newRelative(person *person.Person, level int, relatives []*familytree.Relative, persons []*person.Person) *familytree.Relative {
+func (tg *TreeGenealogical) newRelative(person *entity.Person, level int, relatives []*familytree.Relative, persons []*entity.Person) *familytree.Relative {
 	relative := &familytree.Relative{
 		Type:   tg.relationshipDescription(person, relatives, persons),
 		Level:  level,
@@ -291,7 +291,7 @@ func (tg *TreeGenealogical) newRelative(person *person.Person, level int, relati
 }
 
 // Verifica se o parente já está na lista de parentes.
-func (tg *TreeGenealogical) alreadyInFamily(relative *person.Person, relatives []*familytree.Relative) bool {
+func (tg *TreeGenealogical) alreadyInFamily(relative *entity.Person, relatives []*familytree.Relative) bool {
 	for _, p := range relatives {
 		if p.Person == nil {
 			continue
@@ -328,7 +328,7 @@ func isTypeOfTypeKinship(typeKinship, p string) bool {
 }
 
 // Encontra a pessoa com base no ID.
-func findPerson(ID string, persons []*person.Person) *person.Person {
+func findPerson(ID string, persons []*entity.Person) *entity.Person {
 	for _, person := range persons {
 		if person.ID == ID {
 			return person

@@ -10,8 +10,8 @@ package main
 // 	"github.com/google/uuid"
 // )
 
-// func NewPerson(name, gender, fatherID, motherID string) *person.Person {
-// 	person := &person.Person{
+// func NewPerson(name, gender, fatherID, motherID string) *entity.Person {
+// 	person := &entity.Person{
 // 		ID:     uuid.New().String(),
 // 		Name:   name,
 // 		Gender: gender,
@@ -54,7 +54,7 @@ package main
 
 // 	neymar := NewPerson("Neymar", "M", vicovane.ID, "")
 
-// 	persons := []*person.Person{
+// 	persons := []*entity.Person{
 // 		geova,
 // 		iraci,
 // 		pedro,
