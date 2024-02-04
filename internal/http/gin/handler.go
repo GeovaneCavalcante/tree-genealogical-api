@@ -7,6 +7,7 @@ import (
 
 	"github.com/GeovaneCavalcante/tree-genealogical/config"
 	_ "github.com/GeovaneCavalcante/tree-genealogical/docs"
+	"github.com/GeovaneCavalcante/tree-genealogical/familytree"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
 	"github.com/gin-gonic/gin"
@@ -19,21 +20,24 @@ type errorResponse struct {
 	Error string `json:"error" xml:"error"`
 }
 
-func Handlers(envs *config.Environments, personService person.UseCase, relationshipServoce relationship.UseCase) *gin.Engine {
+func Handlers(envs *config.Environments, personService person.UseCase, relationshipServoce relationship.UseCase, familyTreeService familytree.UseCase) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/health", healthHandler)
 	v1 := r.Group("/api/v1")
 
-	pG := v1.Group("/person")
-	rG := v1.Group("/relationship")
-
 	url := ginSwagger.URL("/swagger/doc.json")
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
 
+	pG := v1.Group("/person")
 	MakePersonHandlers(pG, personService)
+
+	rG := v1.Group("/relationship")
 	MakeRelationshipHandlers(rG, relationshipServoce)
+
+	fG := v1.Group("/familytree")
+	MakeFamilyTreeHandlers(fG, familyTreeService)
 
 	return r
 }
