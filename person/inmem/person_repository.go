@@ -3,6 +3,7 @@ package inmem
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/database"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
@@ -41,6 +42,22 @@ func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Pe
 	return nil, nil
 }
 
+func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.Person, error) {
+	logger.Info(fmt.Sprintf("[Repository] Get person by name: %s", name))
+	for _, p := range r.InmenDB.Persons {
+		if strings.EqualFold(p.Name, name) {
+			for _, r := range r.InmenDB.Relationships {
+				if r.MainPersonID == p.ID {
+					p.Relationships = append(p.Relationships, *r)
+				}
+			}
+			return p, nil
+		}
+	}
+	logger.Info(fmt.Sprintf("[Repository] Get person by name: %s not found", name))
+	return nil, nil
+}
+
 func (r *PersonRepository) List(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
 	logger.Info("[Repository] List person started")
 
@@ -48,6 +65,22 @@ func (r *PersonRepository) List(ctx context.Context, filters map[string]interfac
 
 	logger.Info("[Repository] List person finished")
 	return persons, nil
+}
+
+func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
+	logger.Info("[Repository] List person with relationships started")
+
+	var persons []*person.Person
+	for _, p := range r.InmenDB.Persons {
+		for _, r := range r.InmenDB.Relationships {
+			if r.MainPersonID == p.ID {
+				p.Relationships = append(p.Relationships, *r)
+			}
+		}
+		persons = append(persons, p)
+	}
+	return persons, nil
+
 }
 
 func (r *PersonRepository) Update(ctx context.Context, personID string, person *person.Person) error {

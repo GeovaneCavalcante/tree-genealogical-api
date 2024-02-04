@@ -17,7 +17,9 @@ type Person struct {
 type Repository interface {
 	Create(ctx context.Context, person *Person) error
 	Get(ctx context.Context, ID string) (*Person, error)
+	GetByName(ctx context.Context, name string) (*Person, error)
 	List(ctx context.Context, filters map[string]interface{}) ([]*Person, error)
+	ListWithRelationships(ctx context.Context, filters map[string]interface{}) ([]*Person, error)
 	Update(ctx context.Context, ID string, person *Person) error
 	Delete(ctx context.Context, ID string) error
 }
