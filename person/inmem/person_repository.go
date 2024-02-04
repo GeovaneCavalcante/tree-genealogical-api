@@ -26,7 +26,7 @@ func (r *PersonRepository) Create(ctx context.Context, person *person.Person) er
 	logger.Info("[Repository] Create person started")
 	person.ID = uuid.New().String()
 	person.Relationships = []relationship.Relationship{}
-	r.InmenDB.Persons = append(r.InmenDB.Persons, person)
+	r.InmenDB.Persons = append(r.InmenDB.Persons, *person)
 	logger.Info("[Repository] Create person finished")
 	return nil
 }
@@ -35,7 +35,8 @@ func (r *PersonRepository) Get(ctx context.Context, personID string) (*person.Pe
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s", personID))
 	for _, p := range r.InmenDB.Persons {
 		if p.ID == personID {
-			return p, nil
+			person := p
+			return &person, nil
 		}
 	}
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s not found", personID))
@@ -46,12 +47,14 @@ func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.
 	logger.Info(fmt.Sprintf("[Repository] Get person by name: %s", name))
 	for _, p := range r.InmenDB.Persons {
 		if strings.EqualFold(p.Name, name) {
+			person := p
 			for _, r := range r.InmenDB.Relationships {
-				if r.MainPersonID == p.ID {
-					p.Relationships = append(p.Relationships, *r)
+				if r.MainPersonID == person.ID {
+					relationship := r
+					person.Relationships = append(person.Relationships, relationship)
 				}
 			}
-			return p, nil
+			return &person, nil
 		}
 	}
 	logger.Info(fmt.Sprintf("[Repository] Get person by name: %s not found", name))
@@ -61,7 +64,12 @@ func (r *PersonRepository) GetByName(ctx context.Context, name string) (*person.
 func (r *PersonRepository) List(ctx context.Context, filters map[string]interface{}) ([]*person.Person, error) {
 	logger.Info("[Repository] List person started")
 
-	persons := r.InmenDB.Persons
+	var persons []*person.Person
+
+	for _, p := range r.InmenDB.Persons {
+		person := p
+		persons = append(persons, &person)
+	}
 
 	logger.Info("[Repository] List person finished")
 	return persons, nil
@@ -72,12 +80,14 @@ func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters ma
 
 	var persons []*person.Person
 	for _, p := range r.InmenDB.Persons {
+		person := p
 		for _, r := range r.InmenDB.Relationships {
-			if r.MainPersonID == p.ID {
-				p.Relationships = append(p.Relationships, *r)
+			if r.MainPersonID == person.ID {
+				relationship := r
+				person.Relationships = append(person.Relationships, relationship)
 			}
 		}
-		persons = append(persons, p)
+		persons = append(persons, &person)
 	}
 	return persons, nil
 
@@ -88,7 +98,7 @@ func (r *PersonRepository) Update(ctx context.Context, personID string, person *
 	for i, p := range r.InmenDB.Persons {
 		if p.ID == personID {
 			person.ID = p.ID
-			r.InmenDB.Persons[i] = person
+			r.InmenDB.Persons[i] = *person
 			return nil
 		}
 	}

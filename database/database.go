@@ -7,8 +7,8 @@ import (
 )
 
 type Database struct {
-	Persons       []*person.Person
-	Relationships []*relationship.Relationship
+	Persons       []person.Person
+	Relationships []relationship.Relationship
 }
 
 var database *Database
@@ -16,8 +16,8 @@ var database *Database
 func New() *Database {
 	if database == nil {
 		database = &Database{
-			Persons:       []*person.Person{},
-			Relationships: []*relationship.Relationship{},
+			Persons:       []person.Person{},
+			Relationships: []relationship.Relationship{},
 		}
 
 		loadGeovaneFamily(database)
@@ -26,8 +26,8 @@ func New() *Database {
 	return database
 }
 
-func NewPerson(db *Database, name, gender, fatherID, motherID string) *person.Person {
-	person := &person.Person{
+func NewPerson(db *Database, name, gender, fatherID, motherID string) person.Person {
+	person := person.Person{
 		ID:     uuid.New().String(),
 		Name:   name,
 		Gender: gender,
@@ -35,13 +35,13 @@ func NewPerson(db *Database, name, gender, fatherID, motherID string) *person.Pe
 
 	if fatherID != "" {
 		relationship := relationship.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: fatherID}
-		db.Relationships = append(db.Relationships, &relationship)
+		db.Relationships = append(db.Relationships, relationship)
 
 	}
 
 	if motherID != "" {
 		relationship := relationship.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: motherID}
-		db.Relationships = append(db.Relationships, &relationship)
+		db.Relationships = append(db.Relationships, relationship)
 	}
 
 	db.Persons = append(db.Persons, person)
@@ -49,7 +49,7 @@ func NewPerson(db *Database, name, gender, fatherID, motherID string) *person.Pe
 	return person
 }
 
-func loadGeovaneFamily(db *Database) []*person.Person {
+func loadGeovaneFamily(db *Database) []person.Person {
 
 	geruza := NewPerson(db, "Geruza", "F", "", "")
 	geova := NewPerson(db, "Geova", "M", "", "")
@@ -75,7 +75,7 @@ func loadGeovaneFamily(db *Database) []*person.Person {
 
 	neymar := NewPerson(db, "Neymar", "M", vicovane.ID, "")
 
-	persons := []*person.Person{
+	persons := []person.Person{
 		geova,
 		iraci,
 		pedro,
