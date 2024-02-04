@@ -23,7 +23,7 @@ func NewRelationshipRepository(inmenDB *database.Database) *RelationshipReposito
 func (r *RelationshipRepository) Create(ctx context.Context, relationship *relationship.Relationship) error {
 	logger.Info("[Repository] Create relationship started")
 	relationship.ID = uuid.New().String()
-	r.InmenDB.Relationships = append(r.InmenDB.Relationships, relationship)
+	r.InmenDB.Relationships = append(r.InmenDB.Relationships, *relationship)
 	logger.Info("[Repository] Create relationship finished")
 	return nil
 }
@@ -32,7 +32,8 @@ func (r *RelationshipRepository) Get(ctx context.Context, relationshipID string)
 	logger.Info(fmt.Sprint("[Repository] Get relationship by relationshipID: ", relationshipID))
 	for _, r := range r.InmenDB.Relationships {
 		if r.ID == relationshipID {
-			return r, nil
+			relationship := r
+			return &relationship, nil
 		}
 	}
 	logger.Info(fmt.Sprintf("[Repository] Get relationship by relationshipID: %s not found", relationshipID))
@@ -42,7 +43,11 @@ func (r *RelationshipRepository) Get(ctx context.Context, relationshipID string)
 func (r *RelationshipRepository) List(ctx context.Context, filters map[string]interface{}) ([]*relationship.Relationship, error) {
 	logger.Info("[Repository] List relationship started")
 
-	relationships := r.InmenDB.Relationships
+	relationships := []*relationship.Relationship{}
+	for _, r := range r.InmenDB.Relationships {
+		relationship := r
+		relationships = append(relationships, &relationship)
+	}
 
 	logger.Info("[Repository] List relationship finished")
 	return relationships, nil
@@ -53,7 +58,7 @@ func (r *RelationshipRepository) Update(ctx context.Context, relationshipID stri
 	for i, rr := range r.InmenDB.Relationships {
 		if rr.ID == relationshipID {
 			relationship.ID = rr.ID
-			r.InmenDB.Relationships[i] = relationship
+			r.InmenDB.Relationships[i] = *relationship
 			return nil
 		}
 	}
