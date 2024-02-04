@@ -3,6 +3,7 @@ package gin
 import (
 	"net/http"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -11,21 +12,31 @@ import (
 func createPersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Create person started")
-		var p person.Person
+		var p presenter.Person
 		if err := c.BindJSON(&p); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.Create(c, &p); err != nil {
+		if err := p.Validate(); err != nil {
+			logger.Error("[Handler] Create person error: ", err)
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		pp := p.ToPerson()
+
+		if err := s.Create(c, pp); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
 			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
+		person := presenter.NewPerson(pp)
+
 		logger.Info("[Handler] Create person finished")
-		respondAccept(c, http.StatusCreated, p)
+		respondAccept(c, http.StatusCreated, person)
 	}
 }
 
@@ -48,8 +59,10 @@ func listPersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
+		pp := presenter.NewPersons(persons)
+
 		logger.Info("[Handler] List person finished")
-		respondAccept(c, http.StatusOK, persons)
+		respondAccept(c, http.StatusOK, pp)
 	}
 }
 
@@ -78,8 +91,10 @@ func getPersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
+		pp := presenter.NewPerson(p)
+
 		logger.Info("[Handler] Get person finished")
-		respondAccept(c, http.StatusOK, p)
+		respondAccept(c, http.StatusOK, pp)
 	}
 }
 
@@ -94,21 +109,31 @@ func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		var p person.Person
+		var p presenter.Person
 		if err := c.BindJSON(&p); err != nil {
 			logger.Error("[Handler] Update person error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.Update(c, personID, &p); err != nil {
+		if err := p.Validate(); err != nil {
+			logger.Error("[Handler] Update person error: ", err)
+			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		pp := p.ToPerson()
+
+		if err := s.Update(c, personID, pp); err != nil {
 			logger.Error("[Handler] Update person error: ", err)
 			respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
+		person := presenter.NewPerson(pp)
+
 		logger.Info("[Handler] Update person finished")
-		respondAccept(c, http.StatusOK, p)
+		respondAccept(c, http.StatusOK, person)
 	}
 }
 

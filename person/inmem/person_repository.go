@@ -54,6 +54,7 @@ func (r *PersonRepository) Update(ctx context.Context, personID string, person *
 	logger.Info(fmt.Sprintf("[Repository] Update person started by personID: %s", personID))
 	for i, p := range r.InmenDB.Persons {
 		if p.ID == personID {
+			person.ID = p.ID
 			r.InmenDB.Persons[i] = person
 			return nil
 		}

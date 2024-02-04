@@ -7,6 +7,7 @@ import (
 	"github.com/GeovaneCavalcante/tree-genealogical/database"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
+	"github.com/google/uuid"
 )
 
 type RelationshipRepository struct {
@@ -21,6 +22,7 @@ func NewRelationshipRepository(inmenDB *database.Database) *RelationshipReposito
 
 func (r *RelationshipRepository) Create(ctx context.Context, relationship *relationship.Relationship) error {
 	logger.Info("[Repository] Create relationship started")
+	relationship.ID = uuid.New().String()
 	r.InmenDB.Relationships = append(r.InmenDB.Relationships, relationship)
 	logger.Info("[Repository] Create relationship finished")
 	return nil
@@ -50,6 +52,7 @@ func (r *RelationshipRepository) Update(ctx context.Context, relationshipID stri
 	logger.Info(fmt.Sprintf("[Repository] Update relationship started by relationshipID: %s", relationshipID))
 	for i, rr := range r.InmenDB.Relationships {
 		if rr.ID == relationshipID {
+			relationship.ID = rr.ID
 			r.InmenDB.Relationships[i] = relationship
 			return nil
 		}
