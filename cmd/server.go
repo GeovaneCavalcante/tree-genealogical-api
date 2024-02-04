@@ -13,6 +13,11 @@ import (
 	relationshipInmemRepo "github.com/GeovaneCavalcante/tree-genealogical/relationship/inmem"
 )
 
+// @title Tree Genealogical API
+// @version 1.0
+// @description This is a simple API to manage genealogical trees
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 
 	inmenDB := database.New()

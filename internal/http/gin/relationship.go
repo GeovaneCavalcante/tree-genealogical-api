@@ -9,11 +9,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create a relationship
+// @Description Create a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param relationship body presenter.PaternityRelationshipRequest true "Relationship"
+// @Success 201 {object} presenter.PaternityRelationshipResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /relationship [post]
 func createRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Create relationship started")
-		var r presenter.PaternityRelationship
-		if err := c.BindJSON(&r); err != nil {
+		var r presenter.PaternityRelationshipRequest
+		if err := bindData(c, &r); err != nil {
 			logger.Error("[Handler] Create relationship error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -33,7 +43,7 @@ func createRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		rp := presenter.NewPaternityRelationship(rs)
+		rp := presenter.NewPaternityRelationshipResponse(rs)
 
 		logger.Info("[Handler] Create relationship finished")
 
@@ -41,6 +51,14 @@ func createRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	}
 }
 
+// @Summary List relationships
+// @Description List relationships
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Success 200 {array} presenter.PaternityRelationshipResponse
+// @Failure 500 {object} errorResponse
+// @Router /relationship [get]
 func listRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] List relationship started")
@@ -55,18 +73,28 @@ func listRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 
 		if len(relationships) == 0 {
 			logger.Info("[Handler] List relationship not found")
-			respondAccept(c, http.StatusOK, []presenter.PaternityRelationship{})
+			respondAccept(c, http.StatusOK, []presenter.PaternityRelationshipResponse{})
 			return
 		}
 
 		logger.Info("[Handler] List relationship finished")
 
-		rP := presenter.NewPaternityRelationships(relationships)
+		rP := presenter.NewPaternityRelationshipsResponse(relationships)
 
 		respondAccept(c, http.StatusOK, rP)
 	}
 }
 
+// @Summary Get a relationship
+// @Description Get a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Success 200 {object} presenter.PaternityRelationshipResponse
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [get]
 func getRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Get relationship started")
@@ -93,12 +121,24 @@ func getRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 
 		logger.Info("[Handler] Get relationship finished")
 
-		rp := presenter.NewPaternityRelationship(r)
+		rp := presenter.NewPaternityRelationshipResponse(r)
 
 		respondAccept(c, http.StatusOK, rp)
 	}
 }
 
+// @Summary Update a relationship
+// @Description Update a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Param relationship body presenter.PaternityRelationshipRequest true "Relationship"
+// @Success 200 {object} presenter.PaternityRelationshipResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [put]
 func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Update relationship started")
@@ -111,8 +151,8 @@ func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		var r presenter.PaternityRelationship
-		if err := c.BindJSON(&r); err != nil {
+		var r presenter.PaternityRelationshipRequest
+		if err := bindData(c, &r); err != nil {
 			logger.Error("[Handler] Update relationship error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -134,12 +174,22 @@ func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 
 		logger.Info("[Handler] Update relationship finished")
 
-		rp := presenter.NewPaternityRelationship(rs)
+		rp := presenter.NewPaternityRelationshipResponse(rs)
 
 		respondAccept(c, http.StatusOK, rp)
 	}
 }
 
+// @Summary Delete a relationship
+// @Description Delete a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Success 204
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [delete]
 func deleteRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Delete relationship started")

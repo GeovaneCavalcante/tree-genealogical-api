@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
@@ -9,15 +10,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create a person
+// @Description Create a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param person body presenter.PersonRequest true "Person"
+// @Success 201 {object} presenter.PersonResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /person [post]
 func createPersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Create person started")
-		var p presenter.Person
-		if err := c.BindJSON(&p); err != nil {
+		var p presenter.PersonRequest
+		if err := bindData(c, &p); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		fmt.Println(p)
 
 		if err := p.Validate(); err != nil {
 			logger.Error("[Handler] Create person error: ", err)
@@ -33,13 +46,22 @@ func createPersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		person := presenter.NewPerson(pp)
+		person := presenter.NewPersonResponse(pp)
 
 		logger.Info("[Handler] Create person finished")
 		respondAccept(c, http.StatusCreated, person)
 	}
 }
 
+// @Summary List persons
+// @Description List persons
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param name query string false "Filter by person's lasted name (no implemeted)"
+// @Success 200 {array} presenter.PersonResponse
+// @Failure 500 {object} errorResponse
+// @Router /person [get]
 func listPersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] List person started")
@@ -59,13 +81,23 @@ func listPersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		pp := presenter.NewPersons(persons)
+		pp := presenter.NewPersonsResponse(persons)
 
 		logger.Info("[Handler] List person finished")
 		respondAccept(c, http.StatusOK, pp)
 	}
 }
 
+// @Summary Get a person
+// @Description Get a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Success 200 {object} presenter.PersonResponse
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [get]
 func getPersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Get person started")
@@ -91,13 +123,25 @@ func getPersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		pp := presenter.NewPerson(p)
+		pp := presenter.NewPersonResponse(p)
 
 		logger.Info("[Handler] Get person finished")
 		respondAccept(c, http.StatusOK, pp)
 	}
 }
 
+// @Summary Update a person
+// @Description Update a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Param person body presenter.PersonRequest true "Person"
+// @Success 200 {object} presenter.PersonResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [put]
 func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("[Handler] Update person started")
@@ -109,8 +153,8 @@ func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		var p presenter.Person
-		if err := c.BindJSON(&p); err != nil {
+		var p presenter.PersonRequest
+		if err := bindData(c, &p); err != nil {
 			logger.Error("[Handler] Update person error: ", err)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -130,13 +174,23 @@ func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		person := presenter.NewPerson(pp)
+		person := presenter.NewPersonResponse(pp)
 
 		logger.Info("[Handler] Update person finished")
 		respondAccept(c, http.StatusOK, person)
 	}
 }
 
+// @Summary Delete a person
+// @Description Delete a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Success 204
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [delete]
 func deletePersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		personID := c.Param("id")

@@ -5,37 +5,48 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type PaternityRelationship struct {
-	ID     string `json:"id"`
-	Parent string `json:"parent" validate:"required"`
-	Child  string `json:"child" validate:"required"`
+type PaternityRelationshipResponse struct {
+	ID     string `json:"id" xml:"id"`
+	Parent string `json:"parent" xml:"parent"`
+	Child  string `json:"child" xml:"child"`
 }
 
-func NewPaternityRelationship(relationship *relationship.Relationship) *PaternityRelationship {
-	return &PaternityRelationship{
+type PaternityRelationshipRequest struct {
+	Parent string `json:"parent" xml:"parent" validate:"required"`
+	Child  string `json:"child" xml:"child" validate:"required"`
+}
+
+func NewPaternityRelationshipResponse(relationship *relationship.Relationship) *PaternityRelationshipResponse {
+	return &PaternityRelationshipResponse{
 		ID:     relationship.ID,
 		Parent: relationship.SecundePersonID,
 		Child:  relationship.MainPersonID,
 	}
 }
 
-func NewPaternityRelationships(relationships []*relationship.Relationship) []*PaternityRelationship {
-	var response []*PaternityRelationship
+func NewPaternityRelationshipsResponse(relationships []*relationship.Relationship) []*PaternityRelationshipResponse {
+	var response []*PaternityRelationshipResponse
 	for _, r := range relationships {
-		response = append(response, NewPaternityRelationship(r))
+		response = append(response, NewPaternityRelationshipResponse(r))
 	}
 	return response
 }
 
-func (p *PaternityRelationship) ToRelationship() *relationship.Relationship {
+func (p *PaternityRelationshipRequest) NewPaternityRelationshipRequest() *relationship.Relationship {
 	return &relationship.Relationship{
-		ID:              p.ID,
 		MainPersonID:    p.Child,
 		SecundePersonID: p.Parent,
 	}
 }
 
-func (p *PaternityRelationship) Validate() error {
+func (p *PaternityRelationshipRequest) ToRelationship() *relationship.Relationship {
+	return &relationship.Relationship{
+		MainPersonID:    p.Child,
+		SecundePersonID: p.Parent,
+	}
+}
+
+func (p *PaternityRelationshipRequest) Validate() error {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	return validate.Struct(p)
 }
