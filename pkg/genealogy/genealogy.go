@@ -2,6 +2,7 @@ package genealogy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 )
@@ -39,7 +40,6 @@ var kinshipTypes = map[string]map[string]string{
 
 type TreeGenealogical struct {
 	Root      *entity.Person
-	Persons   []*entity.Person
 	Relatives []*entity.Relative
 }
 
@@ -200,6 +200,7 @@ func (tg *TreeGenealogical) searchForRelatives(ctx context.Context, relative *en
 
 // Encontra o pais do relative (Parente interado no momento).
 func (tg *TreeGenealogical) findParents(relative *entity.Person, relatives []*entity.Relative) *entity.Relative {
+	fmt.Println("findParents")
 	if relative == nil {
 		return nil
 	}
