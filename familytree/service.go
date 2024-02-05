@@ -75,6 +75,8 @@ func (s *Service) DetermineRelationship(ctx context.Context, firstPersonName, se
 		}
 	}
 
+	logger.Info(fmt.Sprintf("[Service] DetermineRelationship finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+
 	return "", nil
 }
 
@@ -104,6 +106,8 @@ func (s *Service) CalculateKinshipDistance(ctx context.Context, firstPersonName,
 			return relative.Level, nil
 		}
 	}
+
+	logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
 
 	return 0, nil
 }
