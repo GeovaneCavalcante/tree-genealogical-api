@@ -20,6 +20,7 @@ func New() *Database {
 		}
 
 		loadGeovaneFamily(database)
+		loadDefaultFamily(database)
 	}
 
 	return database
@@ -33,19 +34,68 @@ func NewPerson(db *Database, name, gender, fatherID, motherID string) entity.Per
 	}
 
 	if fatherID != "" {
-		relationship := entity.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: fatherID}
-		db.Relationships = append(db.Relationships, relationship)
-
+		NewRelationshipAndLoadDb(db, person.ID, fatherID)
 	}
 
 	if motherID != "" {
-		relationship := entity.Relationship{ID: uuid.New().String(), MainPersonID: person.ID, SecundePersonID: motherID}
-		db.Relationships = append(db.Relationships, relationship)
+		NewRelationshipAndLoadDb(db, person.ID, motherID)
 	}
 
 	db.Persons = append(db.Persons, person)
 
 	return person
+}
+
+func NewRelationshipAndLoadDb(db *Database, mainPersonID, secundePersonID string) entity.Relationship {
+
+	relationship := entity.Relationship{
+		ID:              uuid.New().String(),
+		MainPersonID:    mainPersonID,
+		SecundePersonID: secundePersonID,
+	}
+
+	db.Relationships = append(db.Relationships, relationship)
+	return relationship
+
+}
+
+func loadDefaultFamily(db *Database) []entity.Person {
+	martin := NewPerson(db, "Martin", "M", "", "")
+	anastasia := NewPerson(db, "Anastasia", "F", "", "")
+	phoebe := NewPerson(db, "Phoebe", "F", martin.ID, anastasia.ID)
+	advik := NewPerson(db, "Advik", "M", "", "")
+	sonny := NewPerson(db, "Sonny", "M", "", "")
+	ann := NewPerson(db, "Ann", "F", sonny.ID, "")
+	dunny := NewPerson(db, "Dunny", "M", advik.ID, ann.ID)
+	NewRelationshipAndLoadDb(db, dunny.ID, phoebe.ID)
+	bruce := NewPerson(db, "Bruce", "M", advik.ID, phoebe.ID)
+	NewRelationshipAndLoadDb(db, bruce.ID, ann.ID)
+	clark := NewPerson(db, "Clark", "M", "", anastasia.ID)
+	oprah := NewPerson(db, "Oprah", "F", "", "")
+	ellen := NewPerson(db, "Ellen", "F", "", "")
+	eric := NewPerson(db, "Eric", "M", ellen.ID, oprah.ID)
+	jacqueline := NewPerson(db, "Jacqueline", "F", clark.ID, eric.ID)
+	ariel := NewPerson(db, "Ariel", "F", "", "")
+	melody := NewPerson(db, "Melody", "F", eric.ID, ariel.ID)
+
+	persons := []entity.Person{
+		martin,
+		anastasia,
+		phoebe,
+		advik,
+		sonny,
+		ann,
+		dunny,
+		bruce,
+		clark,
+		eric,
+		jacqueline,
+		ariel,
+		melody,
+	}
+
+	return persons
+
 }
 
 func loadGeovaneFamily(db *Database) []entity.Person {
