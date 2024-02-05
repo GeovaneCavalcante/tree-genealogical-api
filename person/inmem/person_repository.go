@@ -32,14 +32,14 @@ func (r *PersonRepository) Create(ctx context.Context, person *entity.Person) er
 
 func (r *PersonRepository) Get(ctx context.Context, personID string) (*entity.Person, error) {
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s", personID))
-	for _, p := range r.InmenDB.Persons {
-		if p.ID == personID {
-			person := p
-			return &person, nil
-		}
+
+	p := findByID(r.InmenDB.Persons, personID)
+	if p == nil {
+		logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s not found", personID))
+		return nil, fmt.Errorf("person not found")
 	}
 	logger.Info(fmt.Sprintf("[Repository] Get person by personID: %s not found", personID))
-	return nil, nil
+	return p, nil
 }
 
 func (r *PersonRepository) GetByName(ctx context.Context, name string) (*entity.Person, error) {
@@ -47,9 +47,11 @@ func (r *PersonRepository) GetByName(ctx context.Context, name string) (*entity.
 	for _, p := range r.InmenDB.Persons {
 		if strings.EqualFold(p.Name, name) {
 			person := p
-			for _, r := range r.InmenDB.Relationships {
-				if r.MainPersonID == person.ID {
-					relationship := r
+			for _, rr := range r.InmenDB.Relationships {
+				if rr.MainPersonID == person.ID {
+					rr.MainPerson = &person
+					rr.SecundePerson = findByID(r.InmenDB.Persons, rr.SecundePersonID)
+					relationship := rr
 					person.Relationships = append(person.Relationships, &relationship)
 				}
 			}
@@ -80,9 +82,11 @@ func (r *PersonRepository) ListWithRelationships(ctx context.Context, filters ma
 	var persons []*entity.Person
 	for _, p := range r.InmenDB.Persons {
 		person := p
-		for _, r := range r.InmenDB.Relationships {
-			if r.MainPersonID == person.ID {
-				relationship := r
+		for _, rr := range r.InmenDB.Relationships {
+			if rr.MainPersonID == person.ID {
+				rr.MainPerson = &person
+				rr.SecundePerson = findByID(r.InmenDB.Persons, rr.SecundePersonID)
+				relationship := rr
 				person.Relationships = append(person.Relationships, &relationship)
 			}
 		}
@@ -114,5 +118,14 @@ func (r *PersonRepository) Delete(ctx context.Context, personID string) error {
 		}
 	}
 	logger.Info(fmt.Sprintf("[Repository] Delete person by personID: %s not found", personID))
+	return nil
+}
+
+func findByID(persons []entity.Person, id string) *entity.Person {
+	for _, p := range persons {
+		if p.ID == id {
+			return &p
+		}
+	}
 	return nil
 }

@@ -5,6 +5,34 @@ definitions:
       error:
         type: string
     type: object
+  presenter.DetermineRelationResponse:
+    properties:
+      relationship:
+        type: string
+    type: object
+  presenter.FamilyTreeResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/presenter.Member'
+        type: array
+    type: object
+  presenter.KinshipDistanceResponse:
+    properties:
+      distance:
+        type: integer
+    type: object
+  presenter.Member:
+    properties:
+      name:
+        type: string
+      relationships:
+        items:
+          $ref: '#/definitions/presenter.Relationship'
+        type: array
+      typeRelationship:
+        type: string
+    type: object
   presenter.PaternityRelationshipRequest:
     properties:
       child:
@@ -46,6 +74,11 @@ definitions:
       name:
         type: string
     type: object
+  presenter.Relationship:
+    properties:
+      parent:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -53,6 +86,109 @@ info:
   title: Tree Genealogical API
   version: "1.0"
 paths:
+  /familytree/kinship/distance/{firstPersonName}/{secondPersonName}:
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: Determine kinship distance
+      parameters:
+      - description: First Person Name
+        in: path
+        name: firstPersonName
+        required: true
+        type: string
+      - description: Second Person Name
+        in: path
+        name: secondPersonName
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.KinshipDistanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Determine kinship distance
+      tags:
+      - familytree
+  /familytree/members/{personName}:
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: Find family members
+      parameters:
+      - description: Person Name
+        in: path
+        name: personName
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.FamilyTreeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Find family members
+      tags:
+      - familytree
+  /familytree/relationship/{firstPersonName}/{secondPersonName}:
+    get:
+      consumes:
+      - application/json
+      - text/xml
+      description: Determine relationship
+      parameters:
+      - description: First Person Name
+        in: path
+        name: firstPersonName
+        required: true
+        type: string
+      - description: Second Person Name
+        in: path
+        name: secondPersonName
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.DetermineRelationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gin.errorResponse'
+      summary: Determine relationship
+      tags:
+      - familytree
   /person:
     get:
       consumes:
