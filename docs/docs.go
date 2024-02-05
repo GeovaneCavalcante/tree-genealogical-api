@@ -15,6 +15,158 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/familytree/kinship/distance/{firstPersonName}/{secondPersonName}": {
+            "get": {
+                "description": "Determine kinship distance",
+                "consumes": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "tags": [
+                    "familytree"
+                ],
+                "summary": "Determine kinship distance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "First Person Name",
+                        "name": "firstPersonName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Second Person Name",
+                        "name": "secondPersonName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.KinshipDistanceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/familytree/members/{personName}": {
+            "get": {
+                "description": "Find family members",
+                "consumes": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "tags": [
+                    "familytree"
+                ],
+                "summary": "Find family members",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Person Name",
+                        "name": "personName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.FamilyTreeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/familytree/relationship/{firstPersonName}/{secondPersonName}": {
+            "get": {
+                "description": "Determine relationship",
+                "consumes": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/xml"
+                ],
+                "tags": [
+                    "familytree"
+                ],
+                "summary": "Determine relationship",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "First Person Name",
+                        "name": "firstPersonName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Second Person Name",
+                        "name": "secondPersonName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.DetermineRelationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/gin.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/person": {
             "get": {
                 "description": "List persons",
@@ -485,6 +637,50 @@ const docTemplate = `{
                 }
             }
         },
+        "presenter.DetermineRelationResponse": {
+            "type": "object",
+            "properties": {
+                "relationship": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.FamilyTreeResponse": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenter.Member"
+                    }
+                }
+            }
+        },
+        "presenter.KinshipDistanceResponse": {
+            "type": "object",
+            "properties": {
+                "distance": {
+                    "type": "integer"
+                }
+            }
+        },
+        "presenter.Member": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "relationships": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenter.Relationship"
+                    }
+                },
+                "typeRelationship": {
+                    "type": "string"
+                }
+            }
+        },
         "presenter.PaternityRelationshipRequest": {
             "type": "object",
             "required": [
@@ -543,6 +739,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.Relationship": {
+            "type": "object",
+            "properties": {
+                "parent": {
                     "type": "string"
                 }
             }
