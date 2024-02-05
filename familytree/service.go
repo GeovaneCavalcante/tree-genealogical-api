@@ -3,7 +3,9 @@ package familytree
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
 	"github.com/GeovaneCavalcante/tree-genealogical/person"
 	"github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
 	"github.com/GeovaneCavalcante/tree-genealogical/relationship"
@@ -23,7 +25,7 @@ func NewService(genealogy GenealogyInterface, personRepo person.Repository, rela
 	}
 }
 
-func (s *Service) GetAllFamilyMembers(ctx context.Context, personName string) ([]*Relative, error) {
+func (s *Service) GetAllFamilyMembers(ctx context.Context, personName string) ([]*entity.Relative, error) {
 	logger.Info(fmt.Sprintf("[Service] GetAllFamilyMembers started for personName: %s", personName))
 
 	person, err := s.PersonRepo.GetByName(ctx, personName)
@@ -45,36 +47,63 @@ func (s *Service) GetAllFamilyMembers(ctx context.Context, personName string) ([
 	return relatives, nil
 }
 
-func (s *Service) CalculateKinshipDistance(ctx context.Context, firstPersonID, secondPersonID string) (int, error) {
-	// logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance started for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID))
+func (s *Service) DetermineRelationship(ctx context.Context, firstPersonName, secondPersonName string) (relationship string, err error) {
+	logger.Info(fmt.Sprintf("[Service] DetermineRelationship started for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
 
-	// relatives, err := s.GetRelatives(ctx, firstPersonID, secondPersonID)
-	// if err != nil {
-	// 	logger.Error(fmt.Sprintf("[Service] CalculateKinshipDistance error for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID), err)
-	// 	return 0, fmt.Errorf("get relatives error: %w", err)
-	// }
+	firstPerson, err := s.PersonRepo.GetByName(ctx, firstPersonName)
+	if err != nil {
+		logger.Error(fmt.Sprintf("[Service] DetermineRelationship error for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName), err)
+		return "", fmt.Errorf("get person error: %w", err)
+	}
 
-	// distance := s.calculateDistance(relatives)
+	persons, err := s.PersonRepo.ListWithRelationships(ctx, nil)
+	if err != nil {
+		logger.Error(fmt.Sprintf("[Service] DetermineRelationship error for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName), err)
+		return "", fmt.Errorf("get person error: %w", err)
+	}
+	relatives := s.Genealogy.BuildFamilyTree(ctx, firstPerson, persons, 1)
 
-	// logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance finished for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID))
-	// return distance, nil
+	if len(relatives) == 0 {
+		logger.Info(fmt.Sprintf("[Service] DetermineRelationship finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+		return "unrelated", nil
+	}
 
-	return 0, nil
-}
-
-func (s *Service) DetermineRelationship(ctx context.Context, firstPersonID, secondPersonID string) (relationship string, err error) {
-	// logger.Info(fmt.Sprintf("[Service] DetermineRelationship started for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID))
-
-	// relatives, err := s.GetRelatives(ctx, firstPersonID, secondPersonID)
-	// if err != nil {
-	// 	logger.Error(fmt.Sprintf("[Service] DetermineRelationship error for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID), err)
-	// 	return "", fmt.Errorf("get relatives error: %w", err)
-	// }
-
-	// relationship = s.determineRelationship(relatives)
-
-	// logger.Info(fmt.Sprintf("[Service] DetermineRelationship finished for firstPersonID: %s and secondPersonID: %s", firstPersonID, secondPersonID))
-	// return relationship, nil
+	for _, relative := range relatives {
+		if strings.EqualFold(relative.Person.Name, secondPersonName) {
+			logger.Info(fmt.Sprintf("[Service] DetermineRelationship finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+			return relative.Type, nil
+		}
+	}
 
 	return "", nil
+}
+
+func (s *Service) CalculateKinshipDistance(ctx context.Context, firstPersonName, secondPersonName string) (int, error) {
+	logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance started for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+	firstPerson, err := s.PersonRepo.GetByName(ctx, firstPersonName)
+	if err != nil {
+		logger.Error(fmt.Sprintf("[Service] CalculateKinshipDistance error for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName), err)
+		return 0, fmt.Errorf("get person error: %w", err)
+	}
+	persons, err := s.PersonRepo.ListWithRelationships(ctx, nil)
+	if err != nil {
+		logger.Error(fmt.Sprintf("[Service] CalculateKinshipDistance error for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName), err)
+		return 0, fmt.Errorf("get person error: %w", err)
+	}
+
+	relatives := s.Genealogy.BuildFamilyTree(ctx, firstPerson, persons, 1)
+
+	if len(relatives) == 0 {
+		logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+		return 0, nil
+	}
+
+	for _, relative := range relatives {
+		if strings.EqualFold(relative.Person.Name, secondPersonName) {
+			logger.Info(fmt.Sprintf("[Service] CalculateKinshipDistance finished for firstPersonName: %s and secondPersonName: %s", firstPersonName, secondPersonName))
+			return relative.Level, nil
+		}
+	}
+
+	return 0, nil
 }
