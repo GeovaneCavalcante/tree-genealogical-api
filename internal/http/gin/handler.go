@@ -51,8 +51,10 @@ func respondAccept(c *gin.Context, status int, data interface{}) {
 	switch c.GetHeader("Accept") {
 	case "text/xml", "application/xml":
 		c.XML(status, data)
+		return
 	case "application/json":
 		c.JSON(status, data)
+		return
 	case "application/x-yaml", "text/yaml", "text/x-yaml", "application/yaml":
 		yamlData, err := yaml.Marshal(data)
 		if err != nil {
@@ -60,8 +62,10 @@ func respondAccept(c *gin.Context, status int, data interface{}) {
 			return
 		}
 		c.Data(status, "application/x-yaml", yamlData)
+		return
 	default:
 		c.JSON(status, data)
+		return
 	}
 }
 
@@ -69,24 +73,24 @@ func bindData(c *gin.Context, obj interface{}) error {
 	switch c.GetHeader("Content-Type") {
 	case "application/xml", "text/xml", "application/json":
 		if err := c.ShouldBind(obj); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return err
 		}
 	case "application/x-yaml", "text/yaml", "text/x-yaml", "application/yaml":
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return err
 		}
 		if err := yaml.Unmarshal(body, obj); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid YAML request body"})
 			return err
 		}
 	default:
 		if err := c.BindJSON(obj); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON request body"})
 			return err
 		}
 	}
 	return nil
+}
+
+func IsEmpty(value string) bool {
+	return value == "" || value == " "
 }

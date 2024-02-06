@@ -381,6 +381,11 @@ func (suite *GenealogyTestSuite) TestIsTypeOfTypeKinship() {
 		assert.Equal(suite.T(), false, check)
 	})
 
+	suite.Run("should return the type valid", func() {
+		check := isTypeOfTypeKinship("Father", "M")
+		assert.Equal(suite.T(), false, check)
+	})
+
 }
 
 func TestSuite(t *testing.T) {

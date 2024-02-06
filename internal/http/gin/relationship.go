@@ -100,7 +100,7 @@ func getRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 		logger.Info("[Handler] Get relationship started")
 		relationshipID := c.Param("id")
 
-		if relationshipID == "" {
+		if IsEmpty(relationshipID) {
 			logger.Info("[Handler] Get relationship not found")
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
 			return
@@ -144,9 +144,8 @@ func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 		logger.Info("[Handler] Update relationship started")
 		relationshipID := c.Param("id")
 
-		if relationshipID == "" {
+		if IsEmpty(relationshipID) {
 			logger.Info("[Handler] Update relationship not found")
-			c.JSON(http.StatusNotFound, gin.H{"error": "relationship not found"})
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
 			return
 		}
@@ -195,7 +194,7 @@ func deleteRelationshipHandler(s relationship.UseCase) gin.HandlerFunc {
 		logger.Info("[Handler] Delete relationship started")
 		relationshipID := c.Param("id")
 
-		if relationshipID == "" {
+		if IsEmpty(relationshipID) {
 			logger.Info("[Handler] Delete relationship not found")
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
 			return

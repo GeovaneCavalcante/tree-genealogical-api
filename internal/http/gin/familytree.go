@@ -24,7 +24,7 @@ func findFamilyMembersHandler(s familytree.UseCase) gin.HandlerFunc {
 		logger.Info("[Handler] Find family members started")
 		personName := c.Param("personName")
 
-		if personName == "" {
+		if IsEmpty(personName) {
 			logger.Error("[Handler] Find family members error: personName should not be empty", nil)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": "personName should not be empty"})
 			return
@@ -68,7 +68,7 @@ func determineRelationshipHandler(s familytree.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		if firstPersonName == "" || secondPersonName == "" {
+		if IsEmpty(firstPersonName) || IsEmpty(secondPersonName) {
 			logger.Error("[Handler] Determine relationship error: firstPersonName and secondPersonName should not be empty", nil)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should not be empty"})
 			return
@@ -113,7 +113,7 @@ func determineKinshipHandler(s familytree.UseCase) gin.HandlerFunc {
 			return
 		}
 
-		if firstPersonName == "" || secondPersonName == "" {
+		if IsEmpty(firstPersonName) || IsEmpty(secondPersonName) {
 			logger.Error("[Handler] Determine kinship error: firstPersonName and secondPersonName should not be empty", nil)
 			respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should not be empty"})
 			return
