@@ -60,7 +60,7 @@ Não existe limite de profundidade na árvore genealógica. O mapeamento de rela
 Exemplo de adição de tataravó:
 
 Declaração do novo tipo.
-```
+```go
 var kinshipTypes = map[string]map[string]string{
     ...,
     greatGreatGrandSon: {"F": "GreatGreatGranddaughter", "M": "GreatGreatGrandson"},
@@ -71,7 +71,7 @@ var kinshipTypes = map[string]map[string]string{
 Adicione uma nova regra de mapeamento na constante `rulesParents`, essa regra são de ancestrais diretos, (mãe, pai, vó, etc.)
 
 É necessário mapear o tipo de relacionamento antecessor ao novo tipo, exemplo (bizavó é antecessor de tataravó, etc.)
-```
+```go
 rulesParents := map[string]string{
     ...,
     greatGrandfather: greatGreatGrandSon,
