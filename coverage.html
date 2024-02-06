@@ -65,11 +65,17 @@
 				
 				<option value="file4">github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin/relationship.go (100.0%)</option>
 				
-				<option value="file5">github.com/GeovaneCavalcante/tree-genealogical/person/service.go (100.0%)</option>
+				<option value="file5">github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter/familytree.go (100.0%)</option>
 				
-				<option value="file6">github.com/GeovaneCavalcante/tree-genealogical/pkg/genealogy/genealogy.go (100.0%)</option>
+				<option value="file6">github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter/person.go (100.0%)</option>
 				
-				<option value="file7">github.com/GeovaneCavalcante/tree-genealogical/relationship/service.go (100.0%)</option>
+				<option value="file7">github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter/relationship.go (100.0%)</option>
+				
+				<option value="file8">github.com/GeovaneCavalcante/tree-genealogical/person/service.go (100.0%)</option>
+				
+				<option value="file9">github.com/GeovaneCavalcante/tree-genealogical/pkg/genealogy/genealogy.go (100.0%)</option>
+				
+				<option value="file10">github.com/GeovaneCavalcante/tree-genealogical/relationship/service.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -888,7 +894,185 @@ func MakeRelationshipHandlers(r *gin.RouterGroup, s relationship.UseCase) <span 
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package person
+		<pre class="file" id="file5" style="display: none">package presenter
+
+import "github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
+
+type FamilyTreeResponse struct {
+        Members []*Member `json:"members" xml:"members"`
+}
+
+type DetermineRelationResponse struct {
+        Relationship string `json:"relationship" xml:"relationship"`
+}
+
+type KinshipDistanceResponse struct {
+        Distance int `json:"distance" xml:"distance"`
+}
+
+type Member struct {
+        Name             string          `json:"name" xml:"name"`
+        TypeRelationship string          `json:"typeRelationship" xml:"typeRelationship"`
+        Relationships    []*Relationship `json:"relationships" xml:"relationships"`
+}
+
+type Relationship struct {
+        Name string `json:"parent" xml:"parent"`
+}
+
+func NewKinshipDistanceResponse(distance int) *KinshipDistanceResponse <span class="cov8" title="1">{
+        return &amp;KinshipDistanceResponse{
+                Distance: distance,
+        }
+}</span>
+
+func NewDetermineRelationResponse(relationship string) *DetermineRelationResponse <span class="cov8" title="1">{
+        return &amp;DetermineRelationResponse{
+                Relationship: relationship,
+        }
+}</span>
+
+func NewFamilyTreeResponse(relatives []*entity.Relative) *FamilyTreeResponse <span class="cov8" title="1">{
+        members := make([]*Member, 0, len(relatives))
+
+        for _, relative := range relatives </span><span class="cov8" title="1">{
+                if relative.Person == nil </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">member := &amp;Member{
+                        Name:             relative.Person.Name,
+                        TypeRelationship: relative.Type,
+                        Relationships:    make([]*Relationship, 0, len(relative.Person.Relationships)),
+                }
+
+                for _, rel := range relative.Person.Relationships </span><span class="cov8" title="1">{
+                        if rel.SecundePerson == nil </span><span class="cov8" title="1">{
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">member.Relationships = append(member.Relationships, &amp;Relationship{
+                                Name: rel.SecundePerson.Name,
+                        })</span>
+                }
+
+                <span class="cov8" title="1">members = append(members, member)</span>
+        }
+
+        <span class="cov8" title="1">return &amp;FamilyTreeResponse{
+                Members: members,
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package presenter
+
+import (
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
+        "github.com/go-playground/validator/v10"
+)
+
+type PersonResponse struct {
+        ID     string `json:"id" xml:"id"`
+        Name   string `json:"name" xml:"name"`
+        Gender string `json:"gender" xml:"gender"`
+}
+
+type PersonRequest struct {
+        Name   string `json:"name" xml:"name" validate:"required"`
+        Gender string `json:"gender" xml:"gender" validate:"required,oneof=F M"`
+}
+
+func NewPersonResponse(person *entity.Person) *PersonResponse <span class="cov8" title="1">{
+        return &amp;PersonResponse{
+                ID:     person.ID,
+                Name:   person.Name,
+                Gender: person.Gender,
+        }
+}</span>
+
+func NewPersonsResponse(persons []*entity.Person) []*PersonResponse <span class="cov8" title="1">{
+        var response []*PersonResponse
+        for _, p := range persons </span><span class="cov8" title="1">{
+                response = append(response, NewPersonResponse(p))
+        }</span>
+        <span class="cov8" title="1">return response</span>
+}
+
+func NewPersonRequest(person *entity.Person) *PersonRequest <span class="cov8" title="1">{
+        return &amp;PersonRequest{
+                Name:   person.Name,
+                Gender: person.Gender,
+        }
+}</span>
+
+func (p *PersonRequest) ToPerson() *entity.Person <span class="cov8" title="1">{
+        return &amp;entity.Person{
+                Name:   p.Name,
+                Gender: p.Gender,
+        }
+}</span>
+
+func (p *PersonRequest) Validate() error <span class="cov8" title="1">{
+        validate := validator.New(validator.WithRequiredStructEnabled())
+        return validate.Struct(p)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package presenter
+
+import (
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
+        "github.com/go-playground/validator/v10"
+)
+
+type PaternityRelationshipResponse struct {
+        ID     string `json:"id" xml:"id"`
+        Parent string `json:"parent" xml:"parent"`
+        Child  string `json:"child" xml:"child"`
+}
+
+type PaternityRelationshipRequest struct {
+        Parent string `json:"parent" xml:"parent" validate:"required"`
+        Child  string `json:"child" xml:"child" validate:"required"`
+}
+
+func NewPaternityRelationshipResponse(relationship *entity.Relationship) *PaternityRelationshipResponse <span class="cov8" title="1">{
+        return &amp;PaternityRelationshipResponse{
+                ID:     relationship.ID,
+                Parent: relationship.SecundePersonID,
+                Child:  relationship.MainPersonID,
+        }
+}</span>
+
+func NewPaternityRelationshipsResponse(relationships []*entity.Relationship) []*PaternityRelationshipResponse <span class="cov8" title="1">{
+        var response []*PaternityRelationshipResponse
+        for _, r := range relationships </span><span class="cov8" title="1">{
+                response = append(response, NewPaternityRelationshipResponse(r))
+        }</span>
+        <span class="cov8" title="1">return response</span>
+}
+
+func (p *PaternityRelationshipRequest) NewPaternityRelationshipRequest() *entity.Relationship <span class="cov8" title="1">{
+        return &amp;entity.Relationship{
+                MainPersonID:    p.Child,
+                SecundePersonID: p.Parent,
+        }
+}</span>
+
+func (p *PaternityRelationshipRequest) ToRelationship() *entity.Relationship <span class="cov8" title="1">{
+        return &amp;entity.Relationship{
+                MainPersonID:    p.Child,
+                SecundePersonID: p.Parent,
+        }
+}</span>
+
+func (p *PaternityRelationshipRequest) Validate() error <span class="cov8" title="1">{
+        validate := validator.New(validator.WithRequiredStructEnabled())
+        return validate.Struct(p)
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package person
 
 import (
         "context"
@@ -1001,7 +1185,7 @@ func (s *Service) Delete(ctx context.Context, personID string) error <span class
 }
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package genealogy
+		<pre class="file" id="file9" style="display: none">package genealogy
 
 import (
         "context"
@@ -1346,7 +1530,7 @@ func findPerson(ID string, persons []*entity.Person) *entity.Person <span class=
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package relationship
+		<pre class="file" id="file10" style="display: none">package relationship
 
 import (
         "context"
