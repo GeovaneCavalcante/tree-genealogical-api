@@ -29,6 +29,7 @@ func (s *Service) GetAllFamilyMembers(ctx context.Context, personName string) ([
 	logger.Info(fmt.Sprintf("[Service] GetAllFamilyMembers started for personName: %s", personName))
 
 	person, err := s.PersonRepo.GetByName(ctx, personName)
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("[Service] GetAllFamilyMembers error for personName: %s", personName), err)
 		return nil, fmt.Errorf("get person error: %w", err)

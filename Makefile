@@ -9,9 +9,13 @@ swagger:
 
 build-mocks:
 	go install go.uber.org/mock/mockgen@latest
+	~/go/bin/mockgen -source=familytree/familytree.go -destination=familytree/mock/familytree.go
+	~/go/bin/mockgen -source=person/person.go -destination=person/mock/person.go
+	~/go/bin/mockgen -source=relationship/relationship.go -destination=relationship/mock/relationship.go
 	
 test:
 	go test -v ./...
 
 test-coverage:
 	go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out -o coverage.html
+	
