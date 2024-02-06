@@ -57,11 +57,19 @@
 				
 				<option value="file0">github.com/GeovaneCavalcante/tree-genealogical/familytree/service.go (100.0%)</option>
 				
-				<option value="file1">github.com/GeovaneCavalcante/tree-genealogical/person/service.go (100.0%)</option>
+				<option value="file1">github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin/familytree.go (100.0%)</option>
 				
-				<option value="file2">github.com/GeovaneCavalcante/tree-genealogical/pkg/genealogy/genealogy.go (100.0%)</option>
+				<option value="file2">github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin/handler.go (100.0%)</option>
 				
-				<option value="file3">github.com/GeovaneCavalcante/tree-genealogical/relationship/service.go (100.0%)</option>
+				<option value="file3">github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin/person.go (100.0%)</option>
+				
+				<option value="file4">github.com/GeovaneCavalcante/tree-genealogical/internal/http/gin/relationship.go (100.0%)</option>
+				
+				<option value="file5">github.com/GeovaneCavalcante/tree-genealogical/person/service.go (100.0%)</option>
+				
+				<option value="file6">github.com/GeovaneCavalcante/tree-genealogical/pkg/genealogy/genealogy.go (100.0%)</option>
+				
+				<option value="file7">github.com/GeovaneCavalcante/tree-genealogical/relationship/service.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -191,7 +199,696 @@ func (s *Service) CalculateKinshipDistance(ctx context.Context, firstPersonName,
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package person
+		<pre class="file" id="file1" style="display: none">package gin
+
+import (
+        "net/http"
+
+        "github.com/GeovaneCavalcante/tree-genealogical/familytree"
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
+        "github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
+        "github.com/gin-gonic/gin"
+)
+
+// @Summary Find family members
+// @Description Find family members
+// @Tags familytree
+// @Accept json,xml
+// @Produce json,xml
+// @Param personName path string true "Person Name"
+// @Success 200 {object} presenter.FamilyTreeResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /familytree/members/{personName} [get]
+func findFamilyMembersHandler(s familytree.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Find family members started")
+                personName := c.Param("personName")
+
+                if IsEmpty(personName) </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Find family members error: personName should not be empty", nil)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": "personName should not be empty"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">relatives, err := s.GetAllFamilyMembers(c, personName)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Find family members error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">r := presenter.NewFamilyTreeResponse(relatives)
+
+                logger.Info("[Handler] Find family members finished")
+
+                respondAccept(c, http.StatusOK, r)</span>
+        }
+}
+
+// @Summary Determine relationship
+// @Description Determine relationship
+// @Tags familytree
+// @Accept json,xml
+// @Produce json,xml
+// @Param firstPersonName path string true "First Person Name"
+// @Param secondPersonName path string true "Second Person Name"
+// @Success 200 {object} presenter.DetermineRelationResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /familytree/relationship/{firstPersonName}/{secondPersonName} [get]
+func determineRelationshipHandler(s familytree.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Determine relationship started")
+                firstPersonName := c.Param("firstPersonName")
+                secondPersonName := c.Param("secondPersonName")
+
+                if firstPersonName == secondPersonName </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine relationship error: firstPersonName and secondPersonName should be different", nil)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should be different"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if IsEmpty(firstPersonName) || IsEmpty(secondPersonName) </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine relationship error: firstPersonName and secondPersonName should not be empty", nil)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should not be empty"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">relationship, err := s.DetermineRelationship(c, firstPersonName, secondPersonName)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">determineRelationResponse := presenter.NewDetermineRelationResponse(relationship)
+
+                logger.Info("[Handler] Determine relationship finished")
+
+                respondAccept(c, http.StatusOK, determineRelationResponse)</span>
+
+        }
+}
+
+// @Summary Determine kinship distance
+// @Description Determine kinship distance
+// @Tags familytree
+// @Accept json,xml
+// @Produce json,xml
+// @Param firstPersonName path string true "First Person Name"
+// @Param secondPersonName path string true "Second Person Name"
+// @Success 200 {object} presenter.KinshipDistanceResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /familytree/kinship/distance/{firstPersonName}/{secondPersonName} [get]
+func determineKinshipHandler(s familytree.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Determine kinship started")
+                firstPersonName := c.Param("firstPersonName")
+                secondPersonName := c.Param("secondPersonName")
+
+                if firstPersonName == secondPersonName </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine kinship error: firstPersonName and secondPersonName should be different", nil)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should be different"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if IsEmpty(firstPersonName) || IsEmpty(secondPersonName) </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine kinship error: firstPersonName and secondPersonName should not be empty", nil)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": "firstPersonName and secondPersonName should not be empty"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">distance, err := s.CalculateKinshipDistance(c, firstPersonName, secondPersonName)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Determine kinship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">kinshipDistanceResponse := presenter.NewKinshipDistanceResponse(distance)
+
+                logger.Info("[Handler] Determine kinship finished")
+
+                respondAccept(c, http.StatusOK, kinshipDistanceResponse)</span>
+        }
+}
+
+func MakeFamilyTreeHandlers(r *gin.RouterGroup, s familytree.UseCase) <span class="cov8" title="1">{
+        r.Handle("GET", "/members/:personName", findFamilyMembersHandler(s))
+        r.Handle("GET", "/relationship/:firstPersonName/:secondPersonName", determineRelationshipHandler(s))
+        r.Handle("GET", "/kinship/distance/:firstPersonName/:secondPersonName", determineKinshipHandler(s))
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package gin
+
+import (
+        "fmt"
+        "io"
+        "net/http"
+
+        "github.com/GeovaneCavalcante/tree-genealogical/config"
+        _ "github.com/GeovaneCavalcante/tree-genealogical/docs"
+        "github.com/GeovaneCavalcante/tree-genealogical/familytree"
+        "github.com/GeovaneCavalcante/tree-genealogical/person"
+        "github.com/GeovaneCavalcante/tree-genealogical/relationship"
+        "github.com/gin-gonic/gin"
+        swaggerFiles "github.com/swaggo/files"
+        ginSwagger "github.com/swaggo/gin-swagger"
+        "gopkg.in/yaml.v2"
+)
+
+type errorResponse struct {
+        Error string `json:"error" xml:"error"`
+}
+
+func Handlers(envs *config.Environments, personService person.UseCase, relationshipServoce relationship.UseCase, familyTreeService familytree.UseCase) *gin.Engine <span class="cov8" title="1">{
+        r := gin.Default()
+
+        r.GET("/health", healthHandler)
+        v1 := r.Group("/api/v1")
+
+        url := ginSwagger.URL("/swagger/doc.json")
+        r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+        r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
+
+        pG := v1.Group("/person")
+        MakePersonHandlers(pG, personService)
+
+        rG := v1.Group("/relationship")
+        MakeRelationshipHandlers(rG, relationshipServoce)
+
+        fG := v1.Group("/familytree")
+        MakeFamilyTreeHandlers(fG, familyTreeService)
+
+        return r
+}</span>
+
+func healthHandler(c *gin.Context) <span class="cov8" title="1">{
+        c.String(http.StatusOK, "App is healthy")
+}</span>
+
+func respondAccept(c *gin.Context, status int, data interface{}) <span class="cov8" title="1">{
+        fmt.Println(c.GetHeader("Accept"))
+        switch c.GetHeader("Accept") </span>{
+        case "text/xml", "application/xml":<span class="cov8" title="1">
+                c.XML(status, data)
+                return</span>
+        case "application/json":<span class="cov8" title="1">
+                c.JSON(status, data)
+                return</span>
+        case "application/x-yaml", "text/yaml", "text/x-yaml", "application/yaml":<span class="cov8" title="1">
+                yamlData, err := yaml.Marshal(data)
+                if err != nil </span><span class="cov8" title="1">{
+                        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+                        return
+                }</span>
+                <span class="cov8" title="1">c.Data(status, "application/x-yaml", yamlData)
+                return</span>
+        default:<span class="cov8" title="1">
+                c.JSON(status, data)
+                return</span>
+        }
+}
+
+func bindData(c *gin.Context, obj interface{}) error <span class="cov8" title="1">{
+        switch c.GetHeader("Content-Type") </span>{
+        case "application/xml", "text/xml", "application/json":<span class="cov8" title="1">
+                if err := c.ShouldBind(obj); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        case "application/x-yaml", "text/yaml", "text/x-yaml", "application/yaml":<span class="cov8" title="1">
+                body, err := io.ReadAll(c.Request.Body)
+                if err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := yaml.Unmarshal(body, obj); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        default:<span class="cov8" title="1">
+                if err := c.BindJSON(obj); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func IsEmpty(value string) bool <span class="cov8" title="1">{
+        return value == "" || value == " "
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package gin
+
+import (
+        "fmt"
+        "net/http"
+
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/entity"
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
+        "github.com/GeovaneCavalcante/tree-genealogical/person"
+        "github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
+        "github.com/gin-gonic/gin"
+)
+
+// @Summary Create a person
+// @Description Create a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param person body presenter.PersonRequest true "Person"
+// @Success 201 {object} presenter.PersonResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /person [post]
+func createPersonHandler(s person.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Create person started")
+                var p presenter.PersonRequest
+                if err := bindData(c, &amp;p); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create person error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">fmt.Println(p)
+
+                if err := p.Validate(); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create person error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">pp := p.ToPerson()
+
+                if err := s.Create(c, pp); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create person error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">person := presenter.NewPersonResponse(pp)
+
+                logger.Info("[Handler] Create person finished")
+                respondAccept(c, http.StatusCreated, person)</span>
+        }
+}
+
+// @Summary List persons
+// @Description List persons
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param name query string false "Filter by person's lasted name (no implemeted)"
+// @Success 200 {array} presenter.PersonResponse
+// @Failure 500 {object} errorResponse
+// @Router /person [get]
+func listPersonHandler(s person.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] List person started")
+
+                filters := map[string]interface{}{}
+
+                persons, err := s.List(c, filters)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] List person error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if len(persons) == 0 </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] List person not found")
+                        respondAccept(c, http.StatusOK, []entity.Person{})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">pp := presenter.NewPersonsResponse(persons)
+
+                logger.Info("[Handler] List person finished")
+                respondAccept(c, http.StatusOK, pp)</span>
+        }
+}
+
+// @Summary Get a person
+// @Description Get a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Success 200 {object} presenter.PersonResponse
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [get]
+func getPersonHandler(s person.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Get person started")
+
+                personID := c.Param("id")
+
+                if IsEmpty(personID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Get person not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">p, err := s.Get(c, personID)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Get person error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if p == nil </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Get person not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">pp := presenter.NewPersonResponse(p)
+
+                logger.Info("[Handler] Get person finished")
+                respondAccept(c, http.StatusOK, pp)</span>
+        }
+}
+
+// @Summary Update a person
+// @Description Update a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Param person body presenter.PersonRequest true "Person"
+// @Success 200 {object} presenter.PersonResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [put]
+func updatePersonHandler(s person.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Update person started")
+                personID := c.Param("id")
+
+                if IsEmpty(personID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Update person not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">var p presenter.PersonRequest
+                if err := bindData(c, &amp;p); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update person error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if err := p.Validate(); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update person error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">pp := p.ToPerson()
+
+                if err := s.Update(c, personID, pp); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update person error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">person := presenter.NewPersonResponse(pp)
+
+                logger.Info("[Handler] Update person finished")
+                respondAccept(c, http.StatusOK, person)</span>
+        }
+}
+
+// @Summary Delete a person
+// @Description Delete a person
+// @Tags person
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Person ID"
+// @Success 204
+// @Failure 404 {object} errorResponse "Person not found"
+// @Failure 500 {object} errorResponse
+// @Router /person/{id} [delete]
+func deletePersonHandler(s person.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                personID := c.Param("id")
+
+                if IsEmpty(personID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Delete person not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] Delete person started")
+
+                if err := s.Delete(c, personID); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Delete person error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] Delete person finished")
+                respondAccept(c, http.StatusNoContent, nil)</span>
+        }
+}
+
+func MakePersonHandlers(r *gin.RouterGroup, s person.UseCase) <span class="cov8" title="1">{
+        r.Handle("POST", "/", createPersonHandler(s))
+        r.Handle("GET", "/", listPersonHandler(s))
+        r.Handle("GET", "/:id", getPersonHandler(s))
+        r.Handle("PUT", "/:id", updatePersonHandler(s))
+        r.Handle("DELETE", "/:id", deletePersonHandler(s))
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package gin
+
+import (
+        "net/http"
+
+        "github.com/GeovaneCavalcante/tree-genealogical/internal/http/presenter"
+        "github.com/GeovaneCavalcante/tree-genealogical/pkg/logger"
+        "github.com/GeovaneCavalcante/tree-genealogical/relationship"
+        "github.com/gin-gonic/gin"
+)
+
+// @Summary Create a relationship
+// @Description Create a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param relationship body presenter.PaternityRelationshipRequest true "Relationship"
+// @Success 201 {object} presenter.PaternityRelationshipResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 500 {object} errorResponse
+// @Router /relationship [post]
+func createRelationshipHandler(s relationship.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Create relationship started")
+                var r presenter.PaternityRelationshipRequest
+                if err := bindData(c, &amp;r); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create relationship error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if err := r.Validate(); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create relationship error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">rs := r.ToRelationship()
+
+                if err := s.Create(c, rs); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Create relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">rp := presenter.NewPaternityRelationshipResponse(rs)
+
+                logger.Info("[Handler] Create relationship finished")
+
+                respondAccept(c, http.StatusCreated, rp)</span>
+        }
+}
+
+// @Summary List relationships
+// @Description List relationships
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Success 200 {array} presenter.PaternityRelationshipResponse
+// @Failure 500 {object} errorResponse
+// @Router /relationship [get]
+func listRelationshipHandler(s relationship.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] List relationship started")
+                filters := map[string]interface{}{}
+
+                relationships, err := s.List(c, filters)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] List relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if len(relationships) == 0 </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] List relationship not found")
+                        respondAccept(c, http.StatusOK, []presenter.PaternityRelationshipResponse{})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] List relationship finished")
+
+                rP := presenter.NewPaternityRelationshipsResponse(relationships)
+
+                respondAccept(c, http.StatusOK, rP)</span>
+        }
+}
+
+// @Summary Get a relationship
+// @Description Get a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Success 200 {object} presenter.PaternityRelationshipResponse
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [get]
+func getRelationshipHandler(s relationship.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Get relationship started")
+                relationshipID := c.Param("id")
+
+                if IsEmpty(relationshipID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Get relationship not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">r, err := s.Get(c, relationshipID)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Get relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if r == nil </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Get relationship not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] Get relationship finished")
+
+                rp := presenter.NewPaternityRelationshipResponse(r)
+
+                respondAccept(c, http.StatusOK, rp)</span>
+        }
+}
+
+// @Summary Update a relationship
+// @Description Update a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Param relationship body presenter.PaternityRelationshipRequest true "Relationship"
+// @Success 200 {object} presenter.PaternityRelationshipResponse
+// @Failure 400 {object} errorResponse "Bad Request"
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [put]
+func updateRelationshipHandler(s relationship.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Update relationship started")
+                relationshipID := c.Param("id")
+
+                if IsEmpty(relationshipID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Update relationship not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">var r presenter.PaternityRelationshipRequest
+                if err := bindData(c, &amp;r); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update relationship error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if err := r.Validate(); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update relationship error: ", err)
+                        respondAccept(c, http.StatusBadRequest, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">rs := r.ToRelationship()
+
+                if err := s.Update(c, relationshipID, rs); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Update relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] Update relationship finished")
+
+                rp := presenter.NewPaternityRelationshipResponse(rs)
+
+                respondAccept(c, http.StatusOK, rp)</span>
+        }
+}
+
+// @Summary Delete a relationship
+// @Description Delete a relationship
+// @Tags relationship
+// @Accept json,xml
+// @Produce json,xml
+// @Param id path string true "Relationship ID"
+// @Success 204
+// @Failure 404 {object} errorResponse "Relationship not found"
+// @Failure 500 {object} errorResponse
+// @Router /relationship/{id} [delete]
+func deleteRelationshipHandler(s relationship.UseCase) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                logger.Info("[Handler] Delete relationship started")
+                relationshipID := c.Param("id")
+
+                if IsEmpty(relationshipID) </span><span class="cov8" title="1">{
+                        logger.Info("[Handler] Delete relationship not found")
+                        respondAccept(c, http.StatusNotFound, gin.H{"error": "relationship not found"})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">if err := s.Delete(c, relationshipID); err != nil </span><span class="cov8" title="1">{
+                        logger.Error("[Handler] Delete relationship error: ", err)
+                        respondAccept(c, http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="1">logger.Info("[Handler] Delete relationship finished")
+                respondAccept(c, http.StatusNoContent, nil)</span>
+        }
+}
+
+func MakeRelationshipHandlers(r *gin.RouterGroup, s relationship.UseCase) <span class="cov8" title="1">{
+        r.POST("", createRelationshipHandler(s))
+        r.GET("", listRelationshipHandler(s))
+        r.GET("/:id", getRelationshipHandler(s))
+        r.PUT("/:id", updateRelationshipHandler(s))
+        r.DELETE("/:id", deleteRelationshipHandler(s))
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package person
 
 import (
         "context"
@@ -304,7 +1001,7 @@ func (s *Service) Delete(ctx context.Context, personID string) error <span class
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package genealogy
+		<pre class="file" id="file6" style="display: none">package genealogy
 
 import (
         "context"
@@ -649,7 +1346,7 @@ func findPerson(ID string, persons []*entity.Person) *entity.Person <span class=
 }
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package relationship
+		<pre class="file" id="file7" style="display: none">package relationship
 
 import (
         "context"

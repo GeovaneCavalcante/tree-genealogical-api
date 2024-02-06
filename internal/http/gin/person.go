@@ -105,7 +105,7 @@ func getPersonHandler(s person.UseCase) gin.HandlerFunc {
 
 		personID := c.Param("id")
 
-		if personID == "" {
+		if IsEmpty(personID) {
 			logger.Info("[Handler] Get person not found")
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
@@ -148,7 +148,7 @@ func updatePersonHandler(s person.UseCase) gin.HandlerFunc {
 		logger.Info("[Handler] Update person started")
 		personID := c.Param("id")
 
-		if personID == "" {
+		if IsEmpty(personID) {
 			logger.Info("[Handler] Update person not found")
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
@@ -196,7 +196,7 @@ func deletePersonHandler(s person.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		personID := c.Param("id")
 
-		if personID == "" {
+		if IsEmpty(personID) {
 			logger.Info("[Handler] Delete person not found")
 			respondAccept(c, http.StatusNotFound, gin.H{"error": "person not found"})
 			return
