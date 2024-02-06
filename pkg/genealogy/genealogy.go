@@ -38,6 +38,24 @@ var kinshipTypes = map[string]map[string]string{
 	greatGrandSon:         {"F": "GreatGranddaughter", "M": "GreatGrandson"},
 }
 
+// Regras para determinar o novo parente com base no parente encontrado.
+var rulesChild = map[string]string{
+	grandFather:      uncle,
+	uncle:            cousin,
+	cousin:           nephew,
+	brother:          nephew,
+	greatGrandfather: greatUncle,
+	nephew:           nephew,
+	son:              grandSon,
+	grandSon:         greatGrandSon,
+}
+
+// Regras para determinar o novo parente com base no parente encontrado.
+var rulesParents = map[string]string{
+	father:      grandFather,
+	grandFather: greatGrandfather,
+}
+
 type TreeGenealogical struct {
 	Root      *entity.Person
 	Relatives []*entity.Relative
@@ -87,12 +105,6 @@ func (tg *TreeGenealogical) relationshipDescription(relative *entity.Person, rel
 	// Busca os pais da pessoa com base nos parentes ja catalogados.
 	parent := tg.findParents(relative, relatives)
 
-	// Regras para determinar o novo parente com base no parente encontrado.
-	rulesParents := map[string]string{
-		father:      grandFather,
-		grandFather: greatGrandfather,
-	}
-
 	// Aplica as regras para determinar o novo parente.
 	if parent != nil {
 		for key, value := range rulesParents {
@@ -106,16 +118,6 @@ func (tg *TreeGenealogical) relationshipDescription(relative *entity.Person, rel
 	child := tg.findChildren(relative, relatives)
 
 	// Regras para determinar o novo parente com base no parente encontrado.
-	rulesChild := map[string]string{
-		grandFather:      uncle,
-		uncle:            cousin,
-		cousin:           nephew,
-		brother:          nephew,
-		greatGrandfather: greatUncle,
-		nephew:           nephew,
-		son:              grandSon,
-		grandSon:         greatGrandSon,
-	}
 
 	// Aplica as regras para determinar o novo parente.
 	if child != nil {

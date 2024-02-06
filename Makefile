@@ -1,5 +1,6 @@
 run:
 	go run cmd/server.go
+	
 dev:
 	~/go/bin/reflex -r "\.go" -s -- sh -c "go run cmd/server.go"
 
@@ -18,4 +19,10 @@ test:
 
 test-coverage:
 	go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out -o coverage.html
-	
+
+
+docker-build-image:
+	docker build -t geovanedeveloper/tree-genealogical-api:latest -f Dockerfile.prod .
+
+docker-run:
+	docker run --rm -p 8080:8080 geovanedeveloper/tree-genealogical-api:latest
